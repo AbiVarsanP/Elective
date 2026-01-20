@@ -16,9 +16,26 @@ export default function Login() {
     setLoading(true);
 
     try {
+      // Resolve identifier: allow entering reg_no or email
+      let loginEmail = email
+      if (!email.includes('@')) {
+        try {
+          const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
+          const resp = await fetch(`${API_BASE}/api/auth/resolve-email`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ identifier: email }) })
+          if (!resp.ok) {
+            const txt = await resp.text()
+            throw new Error(txt || 'Identifier not found')
+          }
+          const j = await resp.json()
+          loginEmail = j.email
+        } catch (err:any) {
+          throw new Error('Could not resolve reg no to email: ' + (err.message ?? String(err)))
+        }
+      }
+
       // Sign in with Supabase
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
+        email: loginEmail,
         password,
       });
       if (signInError) throw signInError;
@@ -66,18 +83,18 @@ export default function Login() {
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
-                Email Address
+                Email or Reg No
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
                 <input
                   id="email"
-                  type="email"
+                  type="text"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter your email"
+                  placeholder="Enter your email or registration number"
                 />
               </div>
             </div>

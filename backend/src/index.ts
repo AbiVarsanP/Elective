@@ -24,6 +24,32 @@ export const supabaseService = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_
 // Public health-check
 app.get('/health', (_req, res) => res.json({ ok: true }))
 
+// Resolve an identifier (email or reg_no) to the user's email.
+// This endpoint is intentionally public to allow login by reg_no.
+app.post('/api/auth/resolve-email', async (req, res) =>{
+  try{
+    const body = req.body || {}
+    const identifier = (body.identifier || body.reg_no || body.value || '') as string
+    if(!identifier) return res.status(400).json({ error: 'identifier required' })
+    // If looks like email, return as-is
+    if(identifier.includes('@')) return res.json({ email: identifier })
+
+    // Try students table
+    const { data: s, error: sErr } = await supabaseService.from('students').select('email').eq('reg_no', identifier).maybeSingle()
+    if(sErr) return res.status(500).json({ error: sErr.message })
+    if(s && s.email) return res.json({ email: s.email })
+
+    // Try staff table
+    const { data: st, error: stErr } = await supabaseService.from('staff').select('email').eq('reg_no', identifier).maybeSingle()
+    if(stErr) return res.status(500).json({ error: stErr.message })
+    if(st && st.email) return res.json({ email: st.email })
+
+    return res.status(404).json({ error: 'Not found' })
+  }catch(err:any){
+    return res.status(500).json({ error: err.message ?? String(err) })
+  }
+})
+
 // Attach user after verifying token
 app.use(verifyJwtMiddleware)
 app.use(attachUser)
