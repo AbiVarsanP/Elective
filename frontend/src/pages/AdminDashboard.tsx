@@ -56,7 +56,6 @@
     const [importErrorsList, setImportErrorsList] = useState<string[] | null>(null)
     const [, setImportingCsv] = useState(false)
     const [staffAll, setStaffAll] = useState<any[] | null>(null)
-    const [mode, setMode] = useState<'create'|'view'>('create')
 
     async function loadElectives(){
         setLoadingElectives(true)
@@ -295,25 +294,9 @@
                 {/* Create Elective card */}
                 <section className="bg-white rounded-xl shadow p-6 w-full">
                     <div className="flex items-center justify-between mb-3">
-                        <div>
-                            <div className="flex items-center gap-4">
-                                <h3 className="text-lg font-medium">Electives</h3>
-                                <div className="flex bg-gray-100 rounded-lg p-1">
-                                    <button onClick={() => setMode('create')} className={`px-3 py-1 rounded ${mode === 'create' ? 'bg-white shadow' : 'text-slate-600'}`}>Create Elective</button>
-                                    <button onClick={() => setMode('view')} className={`px-3 py-1 rounded ${mode === 'view' ? 'bg-white shadow' : 'text-slate-600'}`}>View Electives</button>
-                                </div>
-                            </div>
-                            <div className="text-sm text-slate-500 mt-1">Add multiple rows then create</div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <button onClick={loadElectives} disabled={loadingElectives} title="Load electives" className="p-2 bg-blue-600 text-white rounded-md">
-                                <RefreshCw className="h-5 w-5" />
-                            </button>
-                        </div>
+                        <h3 className="text-lg font-medium">Create Elective</h3>
+                        <div className="text-sm text-slate-500">Add multiple rows then create</div>
                     </div>
-
-                    {mode === 'create' ? (
-                        <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                         <label className="block text-sm">Year</label>
@@ -395,6 +378,121 @@
                                 <Upload className="h-4 w-4" />
                             </label>
                             <button onClick={async ()=>{ if(!csvFile) return alert('Select a file first'); setImportErrorsList(null); setImportPreviewRows(null); try{ let rows:any[] = []; if(csvFile.name.toLowerCase().endsWith('.xlsx')){ const token = (await supabase.auth.getSession()).data.session?.access_token; const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''; const fd = new FormData(); fd.append('file', csvFile); const res = await fetch(`${API_BASE}/api/admin/subjects/parse`, { method: 'POST', headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit), body: fd }); if(!res.ok) throw new Error(await res.text()); const j = await res.json(); rows = j.rows ?? [] } else { const txt = await csvFile.text(); rows = parseCSV(txt) } const deptMap = new Map((departments ?? []).map(d=>[String(d.name).toLowerCase(), d.id])); const staffMap = new Map((staffAll ?? []).map(s=>[String(s.name).toLowerCase(), s.id])); const preview:any[] = []; const errs:string[] = []; for(const r of rows){ const subject_name = (r['subject_name'] || r['subject name'] || r['subjec name'] || r['subject'] || '').trim(); const subject_code = (r['subject_code'] || r['subject code'] || r['code'] || '').trim(); const providing_department = (r['providing_department'] || r['department'] || r['providing department'] || '').trim(); const staff_name = (r['staff_name'] || r['staff name'] || r['staff'] || '').trim(); const total_seats = Number(r['total_seats'] || r['seats'] || r['seat_count'] || r['total seats'] || 0); if(!subject_name || !subject_code || !providing_department){ errs.push('Missing required columns in a row: subject_name/subject_code/providing_department'); continue } const deptId = deptMap.get(providing_department.toLowerCase()) ?? Array.from(deptMap.entries()).find(([k])=> providing_department.toLowerCase().includes(k))?.[1] ?? null; const staffId = staffMap.get(staff_name.toLowerCase()) ?? null; if(!deptId) errs.push(`Department not found: ${providing_department}`); if(staff_name && !staffId) errs.push(`Staff not found: ${staff_name}`); preview.push({ subject_name, subject_code, providing_department_id: deptId, staff_id: staffId, total_seats, parent_elective_id: createParentId, subject_year: createYear, subject_semester: createSem }) } setImportPreviewRows(preview); setImportErrorsList(errs.length>0?errs:null) }catch(e:any){ console.error(e); alert('Failed to parse file: '+ String(e)) } }} className="p-2 bg-emerald-600 text-white rounded" title="Preview file">
+                                <Eye className="h-4 w-4" />
+                            </button>
+                            <button onClick={async ()=>{ if(!importPreviewRows || importPreviewRows.length === 0) return alert('No preview rows to import'); setImportingCsv(true); try{ const token = (await supabase.auth.getSession()).data.session?.access_token; const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''; const rowsToSend = importPreviewRows.map((r:any)=> ({ subject_name: r.subject_name, subject_code: r.subject_code, providing_department_id: r.providing_department_id, total_seats: r.total_seats, staff_id: r.staff_id })); const res = await fetch(`${API_BASE}/api/admin/electives/bulk`, { method: 'POST', headers: ({ Authorization: token ? `Bearer ${token}` : '', 'Content-Type': 'application/json' } as HeadersInit), body: JSON.stringify({ parent_elective_id: createParentId, rows: rowsToSend }) }); if(!res.ok) throw new Error(await res.text()); const j = await res.json(); setElectives(prev => [...(j.created ?? []), ...(prev ?? [])]); if(j.errors && j.errors.length>0) setImportErrorsList((j.errors as any).map((e:any)=> JSON.stringify(e))); else setImportErrorsList(null); setImportPreviewRows(null); setCsvFile(null); alert('CSV import complete') }catch(e:any){ console.error(e); alert('Import failed: '+ String(e)) } finally{ setImportingCsv(false) } }} title="Import previewed rows" className="p-2 bg-blue-700 text-white rounded">
+                                <Upload className="h-4 w-4" />
+                            </button>
+                        </div>
+                    </div>
+                                        {/* CSV bulk import */}
+                                        <div className="mt-4 border-t pt-3">
+                                            <div className="flex items-center gap-3">
+                                                <button onClick={async ()=>{
+                                                    try{
+                                                        const token = (await supabase.auth.getSession()).data.session?.access_token
+                                                        const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
+                                                        const res = await fetch(`${API_BASE}/api/admin/subjects/template.xlsx`, { headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit) })
+                                                        if(!res.ok) throw new Error(await res.text())
+                                                        const blob = await res.blob()
+                                                        const url = window.URL.createObjectURL(blob)
+                                                        const a = document.createElement('a')
+                                                        a.href = url
+                                                        a.download = `subject_import_template.xlsx`
+                                                        document.body.appendChild(a)
+                                                        a.click()
+                                                        a.remove()
+                                                        window.URL.revokeObjectURL(url)
+                                                    }catch(err){ console.error(err); alert('Failed to download template: '+ String(err)) }
+                                                }} className="px-3 py-2 bg-indigo-600 text-white rounded">Download CSV template</button>
+                                                <input type="file" accept=".csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={e=> setCsvFile(e.target.files && e.target.files[0] ? e.target.files[0] : null)} />
+                                                <button onClick={async ()=>{
+                                                    if(!csvFile) return alert('Select a file first')
+                                                    setImportErrorsList(null)
+                                                    setImportPreviewRows(null)
+                                                    try{
+                                                        let rows:any[] = []
+                                                        if(csvFile.name.toLowerCase().endsWith('.xlsx')){
+                                                            const token = (await supabase.auth.getSession()).data.session?.access_token
+                                                            const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
+                                                            const fd = new FormData(); fd.append('file', csvFile)
+                                                            const res = await fetch(`${API_BASE}/api/admin/subjects/parse`, { method: 'POST', headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit), body: fd })
+                                                            if(!res.ok) throw new Error(await res.text())
+                                                            const j = await res.json(); rows = j.rows ?? []
+                                                        } else {
+                                                            const txt = await csvFile.text(); rows = parseCSV(txt)
+                                                        }
+                                                        // map department and staff names
+                                                        const deptMap = new Map((departments ?? []).map(d=>[String(d.name).toLowerCase(), d.id]))
+                                                        const staffMap = new Map((staffAll ?? []).map(s=>[String(s.name).toLowerCase(), s.id]))
+                                                        const preview:any[] = []
+                                                        const errs:string[] = []
+                                                        for(const r of rows){
+                                                            const subject_name = (r['subject_name'] || r['subject name'] || r['subjec name'] || r['subject'] || '').trim()
+                                                            const subject_code = (r['subject_code'] || r['subject code'] || r['code'] || '').trim()
+                                                            const providing_department = (r['providing_department'] || r['department'] || r['providing department'] || '').trim()
+                                                            const staff_name = (r['staff_name'] || r['staff name'] || r['staff'] || '').trim()
+                                                            const total_seats = Number(r['total_seats'] || r['seats'] || r['seat_count'] || r['total seats'] || 0)
+                                                            if(!subject_name || !subject_code || !providing_department){ errs.push('Missing required columns in a row: subject_name/subject_code/providing_department'); continue }
+                                                            const deptId = deptMap.get(providing_department.toLowerCase()) ?? Array.from(deptMap.entries()).find(([k])=> providing_department.toLowerCase().includes(k))?.[1] ?? null
+                                                            const staffId = staffMap.get(staff_name.toLowerCase()) ?? null
+                                                            if(!deptId) errs.push(`Department not found: ${providing_department}`)
+                                                            if(staff_name && !staffId) errs.push(`Staff not found: ${staff_name}`)
+                                                            preview.push({ subject_name, subject_code, providing_department_id: deptId, staff_id: staffId, total_seats, parent_elective_id: createParentId, subject_year: createYear, subject_semester: createSem })
+                                                        }
+                                                        setImportPreviewRows(preview)
+                                                        setImportErrorsList(errs.length>0?errs:null)
+                                                    }catch(e:any){ console.error(e); alert('Failed to parse file: '+ String(e)) }
+                                                }} className="px-3 py-2 bg-emerald-600 text-white rounded">Preview File</button>
+                                                <button onClick={async ()=>{
+                                                    if(!importPreviewRows || importPreviewRows.length === 0) return alert('No preview rows to import')
+                                                    setImportingCsv(true)
+                                                    try{
+                                                        const token = (await supabase.auth.getSession()).data.session?.access_token
+                                                        const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
+                                                        // filter out rows missing dept id
+                                                        const rowsToSend = importPreviewRows.map((r:any)=> ({ subject_name: r.subject_name, subject_code: r.subject_code, providing_department_id: r.providing_department_id, total_seats: r.total_seats, staff_id: r.staff_id }))
+                                                        const res = await fetch(`${API_BASE}/api/admin/electives/bulk`, { method: 'POST', headers: ({ Authorization: token ? `Bearer ${token}` : '', 'Content-Type': 'application/json' } as HeadersInit), body: JSON.stringify({ parent_elective_id: createParentId, rows: rowsToSend }) })
+                                                        if(!res.ok) throw new Error(await res.text())
+                                                        const j = await res.json()
+                                                        setElectives(prev => [...(j.created ?? []), ...(prev ?? [])])
+                                                        if(j.errors && j.errors.length>0) setImportErrorsList((j.errors as any).map((e:any)=> JSON.stringify(e)))
+                                                        else setImportErrorsList(null)
+                                                        setImportPreviewRows(null)
+                                                        setCsvFile(null)
+                                                        alert('CSV import complete')
+                                                    }catch(e:any){ console.error(e); alert('Import failed: '+ String(e)) }
+                                                    finally{ setImportingCsv(false) }
+                                                }} className="px-3 py-2 bg-blue-700 text-white rounded">Import Previewed Rows</button>
+                                            </div>
+                                            {importErrorsList && <div className="mt-2 text-sm text-red-600">{importErrorsList.map((er,i)=> <div key={i}>{er}</div>)}</div>}
+                                            {importPreviewRows && importPreviewRows.length > 0 && (
+                                                <div className="mt-2">
+                                                    <h4 className="text-sm font-medium">Preview ({importPreviewRows.length})</h4>
+                                                    <ul className="mt-2 space-y-1 text-sm">
+                                                        {importPreviewRows.map((r:any, i)=> (
+                                                            <li key={i} className="p-2 bg-gray-50 rounded">{r.subject_code} — {r.subject_name} <span className="text-xs text-slate-500">({departments?.find(d=>d.id===r.providing_department_id)?.name ?? 'DEPT?'}{r.staff_id ? ' — '+(staffAll?.find(s=>s.id===r.staff_id)?.name ?? '') : ''})</span></li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                        </div>
+                    {electiveRows.length > 0 && (
+                        <div className="mt-3">
+                        <h4 className="text-sm font-medium">Pending rows</h4>
+                        <ul className="mt-2 space-y-2">
+                            {electiveRows.map((r, idx) => (
+                            <li key={idx} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                                <div className="text-sm">{r.subject_code} — {r.subject_name} <span className="text-xs text-slate-500">({shortDeptName(departments?.find(d=>d.id===r.providing_department_id)?.name ?? '')} {departments?.find(d=>d.id===r.providing_department_id)?.name ? '— '+departments?.find(d=>d.id===r.providing_department_id)?.name : ''})</span></div>
+                                <div className="flex gap-2">
+                                <button onClick={()=> setElectiveRows(prev => prev.filter((_,i)=> i!==idx))} className="p-2 bg-red-500 text-white rounded" title="Remove row"><Trash2 className="h-4 w-4" /></button>
+                                </div>
+                            </li>
+                            ))}
+                        </ul>
+                        </div>
+                    )}
+                    </section>
                     {Object.keys(grouped).map(parent => (
                     <section key={parent} className="bg-slate-50 p-4 rounded-md">
                         <div className="flex items-center justify-between">
