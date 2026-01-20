@@ -53,3 +53,10 @@ $env:SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 >> node .\sql\import.js
 
 node .\sql\import_staff.js .\sql\staff_import_template.csv
+
+
+curl.exe -i -X PUT "$env:SUPABASE_URL/auth/v1/admin/users/curl.exe -i -X PUT "$env:SUPABASE_URL/auth/v1/admin/users/501a8797-805e-4897-965c-a16a1702f55f" `
+  -H "apikey: $env:SUPABASE_SERVICE_ROLE_KEY" `
+  -H "Authorization: Bearer $env:SUPABASE_SERVICE_ROLE_KEY" `
+  -H "Content-Type: application/json" `
+  -d '{"password":"ER5T68"}'

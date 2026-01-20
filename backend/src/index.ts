@@ -39,10 +39,29 @@ app.post('/api/auth/resolve-email', async (req, res) =>{
     if(sErr) return res.status(500).json({ error: sErr.message })
     if(s && s.email) return res.json({ email: s.email })
 
-    // Try staff table
-    const { data: st, error: stErr } = await supabaseService.from('staff').select('email').eq('reg_no', identifier).maybeSingle()
-    if(stErr) return res.status(500).json({ error: stErr.message })
-    if(st && st.email) return res.json({ email: st.email })
+    // Try to find the user in `auth.users` metadata (some imports store reg_no inside user metadata)
+    const metaCandidates = [
+      'raw_user_meta_data->>reg_no',
+      'raw_user_meta_data->>regno',
+      'raw_user_meta_data->>regNo',
+      'user_metadata->>reg_no',
+      'user_metadata->>regno',
+      'user_metadata->>regNo'
+    ]
+    for(const metaKey of metaCandidates){
+      try{
+        const { data: au, error: auErr } = await supabaseService.from('auth.users').select('id, email').filter(metaKey, 'eq', identifier).maybeSingle()
+        if(auErr){ /* continue trying other keys */ }
+        if(au && (au as any).email) return res.json({ email: (au as any).email })
+      }catch(_e){ /* ignore and try next */ }
+    }
+
+    // As a last resort, try to resolve via staff.user_id if staff table stores a reference elsewhere.
+    // (Don't query staff.reg_no since some schemas don't have that column.)
+    const { data: staffList, error: staffErr } = await supabaseService.from('staff').select('user_id').limit(1)
+    if(staffErr) {
+      // nothing else we can do
+    }
 
     return res.status(404).json({ error: 'Not found' })
   }catch(err:any){
@@ -133,8 +152,8 @@ app.post('/api/admin/electives', requireAdmin, async (req, res) =>{
     if(insErr) return res.status(500).json({ error: insErr.message })
     const newElective = inserted
 
-    // insert blocked departments (ensure providing dept is included)
-    const allBlocked = Array.from(new Set([...(blocked_department_ids ?? []), String(providing_department_id)]))
+    // insert blocked departments (only those explicitly provided via checkbox)
+    const allBlocked = Array.from(new Set([...(blocked_department_ids ?? [])]))
     if(allBlocked.length > 0){
       const rows = allBlocked.map(did => ({ elective_id: newElective.id, department_id: did }))
       // upsert-like: ignore conflicts if table has uniqueness
@@ -202,7 +221,10 @@ app.post('/api/admin/electives/bulk', requireAdmin, async (req, res) =>{
         if(insErr){ errors.push({ row: r, error: insErr.message }); continue }
         const newElective = inserted
 
-        const allBlocked = Array.from(new Set([...(blocked_department_ids ?? []), String(providing_department_id)]))
+        // allow per-row blocked departments (from CSV preview) to override or complement top-level blocked list
+        const perRowBlocked: string[] = Array.isArray(r.blocked_department_ids) ? r.blocked_department_ids : []
+        // if per-row provided, use that; otherwise fall back to outer blocked_department_ids
+        const allBlocked = Array.from(new Set([...(perRowBlocked.length > 0 ? perRowBlocked : (blocked_department_ids ?? []))]))
         if(allBlocked.length > 0){
           const rowsToInsert = allBlocked.map(did => ({ elective_id: newElective.id, department_id: did }))
           await supabaseService.from('elective_blocked_departments').insert(rowsToInsert)

@@ -3,6 +3,12 @@
     import Navbar from '../components/Navbar'
     import { RefreshCw, Plus, Download, Eye, Upload, Trash2, Play, Pause, X, FilePlus } from 'lucide-react'
 
+    function getApiBase(): string {
+        const env = (import.meta.env.VITE_API_URL as string) ?? ''
+        if (env && env.length > 0) return env
+        return 'http://localhost:54321'
+    }
+
     export default function AdminDashboard(){
     const [name, setName] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
@@ -12,7 +18,7 @@
         async function load(){
         setLoading(true)
         const token = (await supabase.auth.getSession()).data.session?.access_token
-        const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
+        const API_BASE = getApiBase()
         const res = await fetch(`${API_BASE}/api/admin/profile`, { headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit) })
         if(res.ok){
             const data = await res.json()
@@ -62,7 +68,7 @@
         setElectivesError(null)
         try{
         const token = (await supabase.auth.getSession()).data.session?.access_token
-            const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
+            const API_BASE = getApiBase()
             const res = await fetch(`${API_BASE}/api/admin/electives`, { headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit) })
         if(!res.ok){
             const txt = await res.text()
@@ -79,7 +85,7 @@
         setElectivesError(null)
         try{
         const token = (await supabase.auth.getSession()).data.session?.access_token
-        const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
+            const API_BASE = getApiBase()
         const res = await fetch(`${API_BASE}/api/admin/electives/${id}/${action}`, {
             method: 'PATCH',
             headers: ({ Authorization: token ? `Bearer ${token}` : '', 'Content-Type': 'application/json' } as HeadersInit)
@@ -102,7 +108,7 @@
         try{
         setGroupLoading(prev => ({ ...prev, [parent]: true }))
         const token = (await supabase.auth.getSession()).data.session?.access_token
-        const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
+        const API_BASE = getApiBase()
         const encoded = encodeURIComponent(parent)
         const res = await fetch(`${API_BASE}/api/admin/electives/group/${encoded}/${action}`, {
             method: 'PATCH',
@@ -132,7 +138,7 @@
         setStudentsModalOpen(true)
         try{
         const token = (await supabase.auth.getSession()).data.session?.access_token
-        const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
+        const API_BASE = getApiBase()
         const res = await fetch(`${API_BASE}/api/admin/electives/${encodeURIComponent(electiveId)}/students`, { headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit) })
         if(!res.ok){
             const txt = await res.text()
@@ -143,6 +149,77 @@
         }catch(err: any){
         setStudentsModalError(err.message ?? String(err))
         }finally{ setStudentsModalLoading(false) }
+    }
+
+    async function downloadElectiveCSV(elective: any){
+        try{
+            const token = (await supabase.auth.getSession()).data.session?.access_token
+            const API_BASE = getApiBase()
+            const res = await fetch(`${API_BASE}/api/admin/electives/${encodeURIComponent(elective.id)}/students`, { headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit) })
+            if(!res.ok) throw new Error(await res.text())
+            const j = await res.json()
+            const students = j.students ?? []
+            const header = ['subject_code','subject_name','student_id','student_reg_no','student_name','student_department','student_email']
+            const lines: string[] = []
+            lines.push(header.join(','))
+            for(const s of students){
+                const row = [
+                    elective.subject_code ?? '',
+                    elective.subject_name ?? '',
+                    s.id ?? '',
+                    s.reg_no ?? '',
+                    s.name ?? '',
+                    s.department_name ?? '',
+                    s.email ?? ''
+                ]
+                lines.push(row.map(v => '"' + String(v ?? '').replace(/"/g,'""') + '"').join(','))
+            }
+            const csv = lines.join('\n')
+            const blob = new Blob([csv], { type: 'text/csv' })
+            const url = window.URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            const safeName = (elective.subject_code || elective.subject_name || elective.id).toString().replace(/[^a-z0-9_\-]/gi,'_')
+            a.download = `elective_${safeName}_students.csv`
+            document.body.appendChild(a)
+            a.click()
+            a.remove()
+            window.URL.revokeObjectURL(url)
+        }catch(err){ console.error('downloadElectiveCSV failed', err); alert('Download failed: '+ String(err)) }
+    }
+
+    async function downloadParentCSV(parentKey: string){
+        try{
+            const token = (await supabase.auth.getSession()).data.session?.access_token
+            const API_BASE = getApiBase()
+            const electivesList = (grouped as any)[parentKey] ?? []
+            const header = ['subject_code','subject_name','student_id','student_reg_no','student_name','student_department','student_email']
+            const lines: string[] = []
+            lines.push(header.join(','))
+            for(const elect of electivesList){
+                try{
+                    const res = await fetch(`${API_BASE}/api/admin/electives/${encodeURIComponent(elect.id)}/students`, { headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit) })
+                    if(!res.ok){ console.warn('Skipped elective due to non-ok response', elect.id); continue }
+                    const j = await res.json()
+                    const students = j.students ?? []
+                    for(const s of students){
+                        const row = [elect.subject_code ?? '', elect.subject_name ?? '', s.id ?? '', s.reg_no ?? '', s.name ?? '', s.department_name ?? '', s.email ?? '']
+                        lines.push(row.map(v => '"' + String(v ?? '').replace(/"/g,'""') + '"').join(','))
+                    }
+                }catch(e){ console.warn('Failed loading elective students', elect.id, e); continue }
+            }
+            const csv = lines.join('\n')
+            const blob = new Blob([csv], { type: 'text/csv' })
+            const url = window.URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            const safeName = String(parentKey).replace(/[^a-z0-9_\-]/gi,'_')
+            a.download = `electives_parent_${safeName}_students.csv`
+            document.body.appendChild(a)
+            a.click()
+            a.remove()
+            window.URL.revokeObjectURL(url)
+        }catch(err){ console.error('downloadParentCSV failed', err); alert('Download failed: '+ String(err)) }
     }
 
     function parseLine(line: string) {
@@ -202,7 +279,7 @@
     async function loadCreateMeta(){
         try{
         const token = (await supabase.auth.getSession()).data.session?.access_token
-        const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
+            const API_BASE = getApiBase()
         // departments
         const dres = await fetch(`${API_BASE}/api/admin/departments`, { headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit) })
         if(dres.ok){ const jd = await dres.json(); setDepartments(jd.departments ?? []) }
@@ -241,7 +318,7 @@
         setCreating(true)
         try{
         const token = (await supabase.auth.getSession()).data.session?.access_token
-        const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
+        const API_BASE = getApiBase()
         const blocked = Object.entries(blockedDepts).filter(([,v])=>v).map(([k])=>k)
         const body = { parent_elective_id: createParentId, rows: electiveRows, blocked_department_ids: blocked }
         const res = await fetch(`${API_BASE}/api/admin/electives/bulk`, { method: 'POST', headers: ({ Authorization: token ? `Bearer ${token}` : '', 'Content-Type': 'application/json' } as HeadersInit), body: JSON.stringify(body) })
@@ -317,10 +394,33 @@
                         </div>
                         <div>
                         <label className="block text-sm">Parent Elective</label>
-                        <select className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" value={createParentId ?? ''} onChange={e=> setCreateParentId(e.target.value || null)}>
-                            <option value="">(none)</option>
-                            {(parentOptions ?? []).map(p => <option key={p.id} value={p.id}>{p.name} ({p.year}/{p.sem})</option>)}
-                        </select>
+                        <div className="mt-1 flex items-center gap-2">
+                            <select className="flex-1 border border-gray-200 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" value={createParentId ?? ''} onChange={e=> setCreateParentId(e.target.value || null)}>
+                                <option value="">(none)</option>
+                                {(parentOptions ?? []).map(p => <option key={p.id} value={p.id}>{p.name} ({p.year}/{p.sem})</option>)}
+                            </select>
+                            <button title="Download students for parent" onClick={async ()=>{
+                                if(!createParentId) return alert('Select a parent first')
+                                try{
+                                    const token = (await supabase.auth.getSession()).data.session?.access_token
+                                    const API_BASE = getApiBase()
+                                    const enc = encodeURIComponent(createParentId)
+                                    const res = await fetch(`${API_BASE}/api/admin/electives/group/${enc}/download`, { headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit) })
+                                    if(!res.ok) throw new Error(await res.text())
+                                    const blob = await res.blob()
+                                    const url = window.URL.createObjectURL(blob)
+                                    const a = document.createElement('a')
+                                    a.href = url
+                                    a.download = `electives_parent_${createParentId}_students.csv`
+                                    document.body.appendChild(a)
+                                    a.click()
+                                    a.remove()
+                                    window.URL.revokeObjectURL(url)
+                                }catch(err){ console.error(err); alert('Failed to download CSV: '+ String(err)) }
+                            }} className="p-2 bg-gray-700 text-white rounded">
+                                <Download className="h-4 w-4" />
+                            </button>
+                        </div>
                         </div>
                         <div>
                         <label className="block text-sm">Providing Department</label>
@@ -352,8 +452,8 @@
                         <label className="block text-sm">Block for departments</label>
                         <div className="flex flex-wrap gap-2 mt-1">
                             {(departments ?? []).map(d => (
-                            <label key={d.id} className="inline-flex items-center gap-2 text-sm bg-gray-50 px-2 py-1 rounded">
-                                <input type="checkbox" checked={!!blockedDepts[d.id]} onChange={()=> toggleBlocked(d.id)} /> <span className="ml-1">{shortDeptName(d.name)} — {d.name}</span>
+                            <label key={d.id} title={d.name} className="inline-flex items-center gap-2 text-sm bg-gray-50 px-2 py-1 rounded">
+                                <input type="checkbox" checked={!!blockedDepts[d.id]} onChange={()=> toggleBlocked(d.id)} /> <span className="ml-1">{d.code ?? shortDeptName(d.name)}</span>
                             </label>
                             ))}
                         </div>
@@ -370,17 +470,57 @@
                             <X className="h-5 w-5" />
                         </button>
                         <div className="ml-auto flex items-center gap-2">
-                            <button title="Download template" onClick={async ()=>{ try{ const token = (await supabase.auth.getSession()).data.session?.access_token; const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''; const res = await fetch(`${API_BASE}/api/admin/subjects/template.xlsx`, { headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit) }); if(!res.ok) throw new Error(await res.text()); const blob = await res.blob(); const url = window.URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `subject_import_template.xlsx`; document.body.appendChild(a); a.click(); a.remove(); window.URL.revokeObjectURL(url); }catch(err){ console.error(err); alert('Failed to download template: '+ String(err)) } }} className="p-2 bg-indigo-600 text-white rounded">
+                            <button title="Download template" onClick={async ()=>{ try{ const token = (await supabase.auth.getSession()).data.session?.access_token; const API_BASE = getApiBase(); const res = await fetch(`${API_BASE}/api/admin/subjects/template.xlsx`, { headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit) }); if(!res.ok) throw new Error(await res.text()); const blob = await res.blob(); const url = window.URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `subject_import_template.xlsx`; document.body.appendChild(a); a.click(); a.remove(); window.URL.revokeObjectURL(url); }catch(err){ console.error(err); alert('Failed to download template: '+ String(err)) } }} className="p-2 bg-indigo-600 text-white rounded">
                                 <Download className="h-4 w-4" />
                             </button>
                             <input id="file-input" className="hidden" type="file" accept=".csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={e=> setCsvFile(e.target.files && e.target.files[0] ? e.target.files[0] : null)} />
                             <label htmlFor="file-input" title="Choose file" className="p-2 bg-emerald-600 text-white rounded cursor-pointer">
                                 <Upload className="h-4 w-4" />
                             </label>
-                            <button onClick={async ()=>{ if(!csvFile) return alert('Select a file first'); setImportErrorsList(null); setImportPreviewRows(null); try{ let rows:any[] = []; if(csvFile.name.toLowerCase().endsWith('.xlsx')){ const token = (await supabase.auth.getSession()).data.session?.access_token; const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''; const fd = new FormData(); fd.append('file', csvFile); const res = await fetch(`${API_BASE}/api/admin/subjects/parse`, { method: 'POST', headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit), body: fd }); if(!res.ok) throw new Error(await res.text()); const j = await res.json(); rows = j.rows ?? [] } else { const txt = await csvFile.text(); rows = parseCSV(txt) } const deptMap = new Map((departments ?? []).map(d=>[String(d.name).toLowerCase(), d.id])); const staffMap = new Map((staffAll ?? []).map(s=>[String(s.name).toLowerCase(), s.id])); const preview:any[] = []; const errs:string[] = []; for(const r of rows){ const subject_name = (r['subject_name'] || r['subject name'] || r['subjec name'] || r['subject'] || '').trim(); const subject_code = (r['subject_code'] || r['subject code'] || r['code'] || '').trim(); const providing_department = (r['providing_department'] || r['department'] || r['providing department'] || '').trim(); const staff_name = (r['staff_name'] || r['staff name'] || r['staff'] || '').trim(); const total_seats = Number(r['total_seats'] || r['seats'] || r['seat_count'] || r['total seats'] || 0); if(!subject_name || !subject_code || !providing_department){ errs.push('Missing required columns in a row: subject_name/subject_code/providing_department'); continue } const deptId = deptMap.get(providing_department.toLowerCase()) ?? Array.from(deptMap.entries()).find(([k])=> providing_department.toLowerCase().includes(k))?.[1] ?? null; const staffId = staffMap.get(staff_name.toLowerCase()) ?? null; if(!deptId) errs.push(`Department not found: ${providing_department}`); if(staff_name && !staffId) errs.push(`Staff not found: ${staff_name}`); preview.push({ subject_name, subject_code, providing_department_id: deptId, staff_id: staffId, total_seats, parent_elective_id: createParentId, subject_year: createYear, subject_semester: createSem }) } setImportPreviewRows(preview); setImportErrorsList(errs.length>0?errs:null) }catch(e:any){ console.error(e); alert('Failed to parse file: '+ String(e)) } }} className="p-2 bg-emerald-600 text-white rounded" title="Preview file">
+                            <button onClick={async ()=>{
+                                if(!csvFile) return alert('Select a file first')
+                                setImportErrorsList(null)
+                                setImportPreviewRows(null)
+                                try{
+                                    let rows:any[] = []
+                                    if(csvFile.name.toLowerCase().endsWith('.xlsx')){
+                                        const token = (await supabase.auth.getSession()).data.session?.access_token
+                                        const API_BASE = getApiBase()
+                                        const fd = new FormData()
+                                        fd.append('file', csvFile)
+                                        const res = await fetch(`${API_BASE}/api/admin/subjects/parse`, { method: 'POST', headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit), body: fd })
+                                        if(!res.ok) throw new Error(await res.text())
+                                        const j = await res.json()
+                                        rows = j.rows ?? []
+                                    } else {
+                                        const txt = await csvFile.text()
+                                        rows = parseCSV(txt)
+                                    }
+                                    const deptMap = new Map((departments ?? []).map(d=>[String(d.name).toLowerCase(), d.id]))
+                                    const staffMap = new Map((staffAll ?? []).map(s=>[String(s.name).toLowerCase(), s.id]))
+                                    const preview:any[] = []
+                                    const errs:string[] = []
+                                    for(const r of rows){
+                                        const subject_name = (r['subject_name'] || r['subject name'] || r['subjec name'] || r['subject'] || '').trim()
+                                        const subject_code = (r['subject_code'] || r['subject code'] || r['code'] || '').trim()
+                                        const providing_department = (r['providing_department'] || r['department'] || r['providing department'] || '').trim()
+                                        const staff_name = (r['staff_name'] || r['staff name'] || r['staff'] || '').trim()
+                                        const total_seats = Number(r['total_seats'] || r['seats'] || r['seat_count'] || r['total seats'] || 0)
+                                        if(!subject_name || !subject_code || !providing_department){ errs.push('Missing required columns in a row: subject_name/subject_code/providing_department'); continue }
+                                        const deptId = deptMap.get(providing_department.toLowerCase()) ?? Array.from(deptMap.entries()).find(([k])=> providing_department.toLowerCase().includes(k))?.[1] ?? null
+                                        const staffId = staffMap.get(staff_name.toLowerCase()) ?? null
+                                        if(!deptId) errs.push(`Department not found: ${providing_department}`)
+                                        if(staff_name && !staffId) errs.push(`Staff not found: ${staff_name}`)
+                                        const blocked_department_ids = deptId ? [deptId] : []
+                                        preview.push({ subject_name, subject_code, providing_department_id: deptId, staff_id: staffId, total_seats, parent_elective_id: createParentId, subject_year: createYear, subject_semester: createSem, blocked_department_ids })
+                                    }
+                                    setImportPreviewRows(preview)
+                                    setImportErrorsList(errs.length>0?errs:null)
+                                }catch(e:any){ console.error(e); alert('Failed to parse file: '+ String(e)) }
+                            }} className="p-2 bg-emerald-600 text-white rounded" title="Preview file">
                                 <Eye className="h-4 w-4" />
                             </button>
-                            <button onClick={async ()=>{ if(!importPreviewRows || importPreviewRows.length === 0) return alert('No preview rows to import'); setImportingCsv(true); try{ const token = (await supabase.auth.getSession()).data.session?.access_token; const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''; const rowsToSend = importPreviewRows.map((r:any)=> ({ subject_name: r.subject_name, subject_code: r.subject_code, providing_department_id: r.providing_department_id, total_seats: r.total_seats, staff_id: r.staff_id })); const res = await fetch(`${API_BASE}/api/admin/electives/bulk`, { method: 'POST', headers: ({ Authorization: token ? `Bearer ${token}` : '', 'Content-Type': 'application/json' } as HeadersInit), body: JSON.stringify({ parent_elective_id: createParentId, rows: rowsToSend }) }); if(!res.ok) throw new Error(await res.text()); const j = await res.json(); setElectives(prev => [...(j.created ?? []), ...(prev ?? [])]); if(j.errors && j.errors.length>0) setImportErrorsList((j.errors as any).map((e:any)=> JSON.stringify(e))); else setImportErrorsList(null); setImportPreviewRows(null); setCsvFile(null); alert('CSV import complete') }catch(e:any){ console.error(e); alert('Import failed: '+ String(e)) } finally{ setImportingCsv(false) } }} title="Import previewed rows" className="p-2 bg-blue-700 text-white rounded">
+                            <button onClick={async ()=>{ if(!importPreviewRows || importPreviewRows.length === 0) return alert('No preview rows to import'); setImportingCsv(true); try{ const token = (await supabase.auth.getSession()).data.session?.access_token; const API_BASE = getApiBase(); const rowsToSend = importPreviewRows.map((r:any)=> ({ subject_name: r.subject_name, subject_code: r.subject_code, providing_department_id: r.providing_department_id, total_seats: r.total_seats, staff_id: r.staff_id, blocked_department_ids: r.blocked_department_ids ?? [] })); const res = await fetch(`${API_BASE}/api/admin/electives/bulk`, { method: 'POST', headers: ({ Authorization: token ? `Bearer ${token}` : '', 'Content-Type': 'application/json' } as HeadersInit), body: JSON.stringify({ parent_elective_id: createParentId, rows: rowsToSend }) }); if(!res.ok) throw new Error(await res.text()); const j = await res.json(); setElectives(prev => [...(j.created ?? []), ...(prev ?? [])]); if(j.errors && j.errors.length>0) setImportErrorsList((j.errors as any).map((e:any)=> JSON.stringify(e))); else setImportErrorsList(null); setImportPreviewRows(null); setCsvFile(null); alert('CSV import complete') }catch(e:any){ console.error(e); alert('Import failed: '+ String(e)) } finally{ setImportingCsv(false) } }} title="Import previewed rows" className="p-2 bg-blue-700 text-white rounded">
                                 <Upload className="h-4 w-4" />
                             </button>
                         </div>
@@ -391,7 +531,7 @@
                                                 <button onClick={async ()=>{
                                                     try{
                                                         const token = (await supabase.auth.getSession()).data.session?.access_token
-                                                        const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
+                                                        const API_BASE = getApiBase()
                                                         const res = await fetch(`${API_BASE}/api/admin/subjects/template.xlsx`, { headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit) })
                                                         if(!res.ok) throw new Error(await res.text())
                                                         const blob = await res.blob()
@@ -414,7 +554,7 @@
                                                         let rows:any[] = []
                                                         if(csvFile.name.toLowerCase().endsWith('.xlsx')){
                                                             const token = (await supabase.auth.getSession()).data.session?.access_token
-                                                            const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
+                                                            const API_BASE = getApiBase()
                                                             const fd = new FormData(); fd.append('file', csvFile)
                                                             const res = await fetch(`${API_BASE}/api/admin/subjects/parse`, { method: 'POST', headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit), body: fd })
                                                             if(!res.ok) throw new Error(await res.text())
@@ -437,11 +577,10 @@
                                                             const deptId = deptMap.get(providing_department.toLowerCase()) ?? Array.from(deptMap.entries()).find(([k])=> providing_department.toLowerCase().includes(k))?.[1] ?? null
                                                             const staffId = staffMap.get(staff_name.toLowerCase()) ?? null
                                                             if(!deptId) errs.push(`Department not found: ${providing_department}`)
-                                                            if(staff_name && !staffId) errs.push(`Staff not found: ${staff_name}`)
-                                                            preview.push({ subject_name, subject_code, providing_department_id: deptId, staff_id: staffId, total_seats, parent_elective_id: createParentId, subject_year: createYear, subject_semester: createSem })
+                                                            if(staff_name && !staffId) errs.push(`Staff not found: ${staff_name}`);
+                                                            const blocked_department_ids = deptId ? [deptId] : [];
+                                                            preview.push({ subject_name, subject_code, providing_department_id: deptId, staff_id: staffId, total_seats, parent_elective_id: createParentId, subject_year: createYear, subject_semester: createSem, blocked_department_ids })
                                                         }
-                                                        setImportPreviewRows(preview)
-                                                        setImportErrorsList(errs.length>0?errs:null)
                                                     }catch(e:any){ console.error(e); alert('Failed to parse file: '+ String(e)) }
                                                 }} className="px-3 py-2 bg-emerald-600 text-white rounded">Preview File</button>
                                                 <button onClick={async ()=>{
@@ -449,9 +588,16 @@
                                                     setImportingCsv(true)
                                                     try{
                                                         const token = (await supabase.auth.getSession()).data.session?.access_token
-                                                        const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
-                                                        // filter out rows missing dept id
-                                                        const rowsToSend = importPreviewRows.map((r:any)=> ({ subject_name: r.subject_name, subject_code: r.subject_code, providing_department_id: r.providing_department_id, total_seats: r.total_seats, staff_id: r.staff_id }))
+                                                        const API_BASE = getApiBase()
+                                                        const rowsToSend = importPreviewRows.map((r:any)=> ({
+                                                            subject_name: r.subject_name,
+                                                            subject_code: r.subject_code,
+                                                            providing_department_id: r.providing_department_id,
+                                                            total_seats: r.total_seats,
+                                                            staff_id: r.staff_id,
+                                                            blocked_department_ids: Array.isArray(r.blocked_department_ids) ? r.blocked_department_ids : (r.blocked_department_ids ? [r.blocked_department_ids] : [])
+                                                        }))
+
                                                         const res = await fetch(`${API_BASE}/api/admin/electives/bulk`, { method: 'POST', headers: ({ Authorization: token ? `Bearer ${token}` : '', 'Content-Type': 'application/json' } as HeadersInit), body: JSON.stringify({ parent_elective_id: createParentId, rows: rowsToSend }) })
                                                         if(!res.ok) throw new Error(await res.text())
                                                         const j = await res.json()
@@ -471,7 +617,35 @@
                                                     <h4 className="text-sm font-medium">Preview ({importPreviewRows.length})</h4>
                                                     <ul className="mt-2 space-y-1 text-sm">
                                                         {importPreviewRows.map((r:any, i)=> (
-                                                            <li key={i} className="p-2 bg-gray-50 rounded">{r.subject_code} — {r.subject_name} <span className="text-xs text-slate-500">({departments?.find(d=>d.id===r.providing_department_id)?.name ?? 'DEPT?'}{r.staff_id ? ' — '+(staffAll?.find(s=>s.id===r.staff_id)?.name ?? '') : ''})</span></li>
+                                                            <li key={i} className="p-2 bg-gray-50 rounded">
+                                                                <div className="flex items-start justify-between">
+                                                                    <div>
+                                                                        <div className="font-medium">{r.subject_code} — {r.subject_name}</div>
+                                                                        <div className="text-xs text-slate-500">{departments?.find(d=>d.id===r.providing_department_id)?.name ?? 'DEPT?'}{r.staff_id ? ' — '+(staffAll?.find(s=>s.id===r.staff_id)?.name ?? '') : ''}</div>
+                                                                    </div>
+                                                                    <div className="text-xs">Seats: {r.total_seats}</div>
+                                                                </div>
+                                                                <div className="mt-2 flex flex-wrap gap-2">
+                                                                    {(departments ?? []).map((d:any)=>{
+                                                                        const checked = Array.isArray(r.blocked_department_ids) && r.blocked_department_ids.includes(d.id)
+                                                                        return (
+                                                                            <label key={d.id} title={d.name} className="inline-flex items-center gap-2 text-sm bg-white px-2 py-1 rounded border">
+                                                                                <input type="checkbox" checked={checked} onChange={()=>{
+                                                                                    setImportPreviewRows(prev=>{
+                                                                                        const copy = (prev ?? []).map((x:any)=> ({ ...x }))
+                                                                                        const row = copy[i] || {}
+                                                                                        row.blocked_department_ids = Array.isArray(row.blocked_department_ids) ? [...row.blocked_department_ids] : []
+                                                                                        if(checked){ row.blocked_department_ids = row.blocked_department_ids.filter((id:any)=> id !== d.id) } else { row.blocked_department_ids.push(d.id) }
+                                                                                        copy[i] = row
+                                                                                        return copy
+                                                                                    })
+                                                                                }} />
+                                                                                <span className="ml-1">{d.code ?? shortDeptName(d.name)}</span>
+                                                                            </label>
+                                                                        )
+                                                                    })}
+                                                                </div>
+                                                            </li>
                                                         ))}
                                                     </ul>
                                                 </div>
@@ -500,27 +674,7 @@
                         <div className="flex items-center gap-3">
                             <div className="text-sm text-slate-500">Showing {grouped[parent].length} electives</div>
                             <div className="flex items-center gap-2">
-                            <button title="Download CSV" onClick={async () => {
-                                try{
-                                    const token = (await supabase.auth.getSession()).data.session?.access_token
-                                    const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
-                                    const enc = encodeURIComponent(parent)
-                                    const res = await fetch(`${API_BASE}/api/admin/electives/group/${enc}/download`, { headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit) })
-                                    if(!res.ok) throw new Error(await res.text())
-                                    const blob = await res.blob()
-                                    const url = window.URL.createObjectURL(blob)
-                                    const a = document.createElement('a')
-                                    a.href = url
-                                    a.download = `electives_${parent}_students.csv`
-                                    document.body.appendChild(a)
-                                    a.click()
-                                    a.remove()
-                                    window.URL.revokeObjectURL(url)
-                                }catch(err){
-                                    console.error(err)
-                                    alert('Failed to download CSV: '+ String(err))
-                                }
-                                }} className="p-2 bg-gray-700 text-white rounded">
+                            <button title="Download CSV" onClick={async () => { await downloadParentCSV(parent) }} className="p-2 bg-gray-700 text-white rounded">
                                 <Download className="h-4 w-4" />
                             </button>
                             <button title="Activate all" onClick={async ()=> await patchGroup(parent,'activate')} disabled={loadingElectives || !!groupLoading[parent]} className={`px-3 py-2 rounded flex items-center gap-2 ${groupLoading[parent] ? 'opacity-50 cursor-not-allowed bg-gray-200' : 'bg-green-600 text-white hover:bg-green-700'}`}>
@@ -584,6 +738,9 @@
                                         <button onClick={async () => await loadElectiveStudents(e.id)} title="List students" className="p-2 bg-indigo-600 text-white rounded">
                                             <Eye className="h-4 w-4" />
                                         </button>
+                                        <button onClick={async () => await downloadElectiveCSV(e)} title="Download students CSV" className="p-2 bg-gray-800 text-white rounded">
+                                            <Download className="h-4 w-4" />
+                                        </button>
                                         </div>
                                     </td>
                                     </tr>
@@ -610,7 +767,10 @@
                                                 <button onClick={async ()=> await patchElective(e.id,'activate')} className="text-sm px-2 py-1 bg-green-600 text-white rounded">Activate</button>
                                             )}
                                             {!e.polling_closed && <button onClick={async ()=> await patchElective(e.id,'polling-close')} className="text-sm px-2 py-1 bg-blue-600 text-white rounded">Close Poll</button>}
-                                            <button onClick={async () => await loadElectiveStudents(e.id)} className="text-sm px-2 py-1 bg-indigo-600 text-white rounded">Students</button>
+                                            <div className="flex gap-2">
+                                                <button onClick={async () => await loadElectiveStudents(e.id)} className="text-sm px-2 py-1 bg-indigo-600 text-white rounded">Students</button>
+                                                <button onClick={async () => await downloadElectiveCSV(e)} className="text-sm px-2 py-1 bg-gray-800 text-white rounded">Download</button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
