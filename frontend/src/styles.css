@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Minimal base styles to replace previous global CSS */
+@layer base {
+	html,body,#root { height: 100%; }
+	body { @apply antialiased text-slate-700 bg-slate-50 }
+}
+
+/* Small helpers for legacy markup */
+.form-max { max-width: 380px }
+.full-width { width: 100% }
+
