@@ -1,0 +1,499 @@
+{
+  "target": "MECH",
+  "departments": [
+    {
+      "id": 5,
+      "name": "Mechanical Engineering"
+    }
+  ],
+  "results": [
+    {
+      "student_id": "a4d78293-e77a-43fc-8404-2535c76de6dd",
+      "user_id": "a54bcbe4-301c-4c0c-a905-20a22ca57ae0",
+      "email": "me@example.com",
+      "reg_no": "2303811711421001",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "40194edb-c0f0-45d4-aee9-e328972e3b0c",
+      "user_id": "046b88b1-ae5f-4f54-a432-2a9fa2ae8b75",
+      "email": "aswinraja.me24@krct.ac.in",
+      "reg_no": "2403811711421003",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "cbd3d5a6-dcc2-44af-a798-2a3ed4ae84ee",
+      "user_id": "35422c07-776b-4653-b856-41c951ce100c",
+      "email": "beghanraj.me24@krct.ac.in",
+      "reg_no": "2403811711421005",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "3631a53e-758b-4533-bf18-e5c807bc0fd5",
+      "user_id": "6b1a0550-dd82-4535-be43-246e7ce18e1d",
+      "email": "dhivahar.me24@krct.ac.in",
+      "reg_no": "2403811711421007",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "0875a8b8-c9f9-43ec-882d-f04f8bd6262d",
+      "user_id": "fd809101-a6be-4644-83f3-2cdb1086ba57",
+      "email": "fahad.me24@krct.ac.in",
+      "reg_no": "2403811711421009",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "1c406d9e-6486-4bef-895e-75580843493f",
+      "user_id": "7faacb7e-1d7e-4d46-866b-f52dfcf6995c",
+      "email": "gowthams.me24@krct.ac.in",
+      "reg_no": "2403811711421011",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "49587e65-19f0-449c-8479-3db2cbc75345",
+      "user_id": "576f6be8-529f-41bf-b3ed-b937fb22bd5e",
+      "email": "harisudhan.me24@krct.ac.in",
+      "reg_no": "2403811711421013",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "262101a4-75af-4bf9-9c9b-71111b779ab0",
+      "user_id": "5e0497bc-2e12-4439-aba1-e4d24526148e",
+      "email": "infantowesely.me24@krct.ac.in",
+      "reg_no": "2403811711421015",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "a111c89c-44a9-42af-b1bb-df9d16f76d8b",
+      "user_id": "3a6744bf-759c-448c-834b-0fa562972aba",
+      "email": "jones.me24@krct.ac.in",
+      "reg_no": "2403811711421017",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "95d1d6d6-5e51-4827-a5d6-4b924e5a6242",
+      "user_id": "6f054578-2146-446d-986a-5612dce363a3",
+      "email": "karthi.me24@krct.ac.in",
+      "reg_no": "2403811711421019",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "bfa82f02-d086-46e8-ae33-74624332870f",
+      "user_id": "e33e63b4-1548-42f0-968c-8a45fa9b9513",
+      "email": "kishorekumar.me24@krct.ac.in",
+      "reg_no": "2403811711421021",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "54061964-d0b0-41c6-801e-c1f88dbe6373",
+      "user_id": "8f11aceb-82f2-4599-81ec-251c46811939",
+      "email": "lohitprakash.me24@krct.ac.in",
+      "reg_no": "2403811711421023",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "526922bb-9f6a-4b68-89b2-c37e14188ba5",
+      "user_id": "81a19962-8bea-4e2f-a70a-6f64258aaf66",
+      "email": "mathan.me24@krct.ac.in",
+      "reg_no": "2403811711421025",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "545823a0-2d42-4d48-8e08-ef8b0b7fe5fa",
+      "user_id": "cb4d2efc-e362-4b1f-ab4c-4f62c96548ce",
+      "email": "mohanaganesh.me24@krct.ac.in",
+      "reg_no": "2403811711421027",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "78e0ad82-658a-4049-a5ab-160d459c6b22",
+      "user_id": "42024773-4ae0-41d0-b4f2-5a398843257e",
+      "email": "murali.me24@krct.ac.in",
+      "reg_no": "2403811711421029",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "5fac1669-dcaf-4565-b7d0-3f0a0646d9ad",
+      "user_id": "c67dd484-60bf-4625-a7ef-9f5601edd0cf",
+      "email": "murugesh.me24@krct.ac.in",
+      "reg_no": "2403811711421031",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "d21edac3-734e-4be4-91c2-896c78cd46f0",
+      "user_id": "272d2ea9-937b-4e2a-9257-81277d409c2d",
+      "email": "nirmal.me24@krct.ac.in",
+      "reg_no": "2403811711421034",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "c4f6e143-020b-4c26-b5d0-80b8742c3be4",
+      "user_id": "80d133c2-b68f-4fe3-a033-5981ac7e38ab",
+      "email": "nithishkumar.me24@krct.ac.in",
+      "reg_no": "2403811711421036",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "4d868045-c438-4b82-b3bb-5f04ad4e10d9",
+      "user_id": "34af6f5a-75c7-4416-8f42-e45747631178",
+      "email": "pradheswaran.me24@krct.ac.in",
+      "reg_no": "2403811711421038",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "8d908d98-3f62-406b-8874-960e82b10add",
+      "user_id": "b42833a4-153f-4d1e-9ab2-b5f6cb649917",
+      "email": "akhil.me24@krct.ac.in",
+      "reg_no": "2403811711421002",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "d307aeba-81a1-4c28-a089-1152cb2c6d6a",
+      "user_id": "d16bce2a-56a1-427c-9968-b0a5df090c10",
+      "email": "batricvijay.me24@krct.ac.in",
+      "reg_no": "2403811711421004",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "8097a8f0-f5be-46bd-9d47-cf6611ca219c",
+      "user_id": "12405332-205a-4bf0-9e20-287117c84150",
+      "email": "bhuvanesh.me24@krct.ac.in",
+      "reg_no": "2403811711421006",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "796afdcf-9d4e-4509-8594-c5dd9f47528e",
+      "user_id": "cafb2f36-62af-40d4-919c-9d5a825c45bf",
+      "email": "ezainraymen.me24@krct.ac.in",
+      "reg_no": "2403811711421008",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "4b8f995b-a23c-4d73-bbec-e065906886bd",
+      "user_id": "8ea6135d-b4ba-4706-90e2-7d7c9a962f25",
+      "email": "gowtham.me24@krct.ac.in",
+      "reg_no": "2403811711421010",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "bb3abf74-766a-4670-87d8-f594530c3c90",
+      "user_id": "03e0e17b-be3c-4283-a967-72c6310a68e2",
+      "email": "harish.me24@krct.ac.in",
+      "reg_no": "2403811711421012",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "7b089066-ee27-47fa-aa93-e25e81508cc5",
+      "user_id": "b077e35b-6caf-48f5-b1f7-e7b431366d1e",
+      "email": "hewinarul.me24@krct.ac.in",
+      "reg_no": "2403811711421014",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "56b9cdfa-bc51-4c15-b4ae-70d11e231b94",
+      "user_id": "6cf82b5b-7ec5-4fb0-b7e5-a00b759f6783",
+      "email": "jerome.me24@krct.ac.in",
+      "reg_no": "2403811711421016",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "2c125cab-ca28-4bb5-bc49-25bba3867bd7",
+      "user_id": "63babf07-7537-4d08-9996-cc47b7def598",
+      "email": "kameeswaran.me24@krct.ac.in",
+      "reg_no": "2403811711421018",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "711ff278-86da-4dd2-9189-41c0dfbc5648",
+      "user_id": "560c58b9-9f16-474c-bd1c-b7014e62f701",
+      "email": "kirtibhushan.me24@krct.ac.in",
+      "reg_no": "2403811711421020",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "0fc587c9-2b35-4d27-a1e0-0e8e4b1afddf",
+      "user_id": "33b83b6a-c748-4f1a-934c-362400455aa1",
+      "email": "kishore.me24@krct.ac.in",
+      "reg_no": "2403811711421022",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "9c4430dc-8623-4cbc-9daf-c26217170e39",
+      "user_id": "48d8500e-5695-4bc8-9e64-e0c771eefa6b",
+      "email": "mahendhiran.me24@krct.ac.in",
+      "reg_no": "2403811711421024",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "94d8f0d6-be16-4c60-9815-2e7cd00d11fa",
+      "user_id": "f43b2d08-1edf-42e9-99b7-6e9954bed1bc",
+      "email": "mohamedzubarulhaq.me24@krct.ac.in",
+      "reg_no": "2403811711421026",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "18cf8d91-ede6-4932-9dc8-30a6a5ffb4c3",
+      "user_id": "adc945f5-ce07-425c-aca4-6c65f2ac5080",
+      "email": "mukesh.me24@krct.ac.in",
+      "reg_no": "2403811711421028",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "2fd32cac-84bf-4dc2-87c6-6311d2831d81",
+      "user_id": "538c0c8b-6ac6-4f95-bca5-069d3c3c141f",
+      "email": "muralikrishna.me24@krct.ac.in",
+      "reg_no": "2403811711421030",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "5302a925-fee6-4938-80c1-63a6ff46b2fb",
+      "user_id": "b4a4727c-07da-446f-8261-90059d2299a8",
+      "email": "naveenkumar.me24@krct.ac.in",
+      "reg_no": "2403811711421033",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "62b78d28-b8fb-47ad-8f53-260001657a9b",
+      "user_id": "949b154e-f923-4b23-9de9-c7117ac07e96",
+      "email": "nitheeshkumar.me24@krct.ac.in",
+      "reg_no": "2403811711421035",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "2527897d-4cb2-4ca6-af18-dbc5e6f0a4b3",
+      "user_id": "efa7242b-e526-45f1-ae6d-5e44dde5819a",
+      "email": "poovarasan.me24@krct.ac.in",
+      "reg_no": "2403811711421037",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "da53375c-4eeb-446d-9222-1a92d86492d6",
+      "user_id": "211b1962-89be-4406-a009-4864e06ebab0",
+      "email": "prasanth.me24@krct.ac.in",
+      "reg_no": "2403811711421039",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "cb960c1b-540c-4c56-897b-dcbd032bceb7",
+      "user_id": "6aa954b5-5f3c-4de4-8797-0c689b591f8b",
+      "email": "praveeng.me24@krct.ac.in",
+      "reg_no": "2403811711421040",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "ee42d91a-7837-4017-ac89-ddac046a5225",
+      "user_id": "cf1bd6cd-b206-4496-b0e8-870d3b673cc0",
+      "email": "praveenk.me24@krct.ac.in",
+      "reg_no": "2403811711421041",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "6348edaa-6c3d-4bcd-9636-c152c5b11a81",
+      "user_id": "c66cd412-39a5-4467-90b1-5083bfc131d1",
+      "email": "priyan.me24@krct.ac.in",
+      "reg_no": "2403811711421042",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "eec466ee-6c30-4b77-8d0d-b0032a90bd8b",
+      "user_id": "1eccf16b-fc86-428d-9cb9-96bdf70d6b75",
+      "email": "ragul.me24@krct.ac.in",
+      "reg_no": "2403811711421043",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "4904557f-3936-4a07-b37f-26a76bb44a70",
+      "user_id": "ffe10669-130a-4f00-a5d2-bd0f0ff9ebbd",
+      "email": "rahulnandhan.me24@krct.ac.in",
+      "reg_no": "2403811711421044",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "63d66357-1034-41b7-89cb-b0327c4abec5",
+      "user_id": "75947b5d-7df7-40b0-b230-c07ed34b771e",
+      "email": "ranjith.me24@krct.ac.in",
+      "reg_no": "2403811711421045",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "d71e294f-8020-420b-9e8f-97bc88899440",
+      "user_id": "8e245aae-67ff-4546-915c-2f2b797773ce",
+      "email": "rithan.me24@krct.ac.in",
+      "reg_no": "2403811711421046",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "7b15fcaa-925c-4496-9ce6-fd2be16216da",
+      "user_id": "cb6ff18c-bffa-4e44-86ed-7e1891f5f704",
+      "email": "riyash.me24@krct.ac.in",
+      "reg_no": "2403811711421047",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "e5c9115d-f1c6-4302-a935-631276e6b324",
+      "user_id": "ee4e3c97-a61f-4bb8-9cea-f70061fd5bee",
+      "email": "sachingowtham.me24@krct.ac.in",
+      "reg_no": "2403811711421048",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "01cae168-e46f-457c-9f76-c97ffa639c57",
+      "user_id": "f5a825ff-4777-4da4-bb25-caa4f8480913",
+      "email": "sanjai.me24@krct.ac.in",
+      "reg_no": "2403811711421050",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "669b59db-5707-40a2-8278-bbd30cd3012c",
+      "user_id": "d42517c7-1faa-4e0f-bc1e-b35f20d3c0da",
+      "email": "santhosh.me24@krct.ac.in",
+      "reg_no": "2403811711421053",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "f81453b4-149a-426a-9004-68558407a17a",
+      "user_id": "4bea0098-92a6-4efc-9d93-2873a0c39adf",
+      "email": "sengamalasrivarshan.me24@krct.ac.in",
+      "reg_no": "2403811711421055",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "836bf8ce-253c-47a6-bbea-da05cae1fabf",
+      "user_id": "b53e78c4-a492-4b6a-a026-79fcbc87938f",
+      "email": "suriyaprakash.me24@krct.ac.in",
+      "reg_no": "2403811711421057",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "1f5948bd-dc0e-4d5e-b8fc-b787cb54e8e6",
+      "user_id": "d7a91de1-5d15-4f08-86c8-b74a6ee82440",
+      "email": "ugesh.me24@krct.ac.in",
+      "reg_no": "2403811711421059",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "1037cd60-9fd3-4379-bfb3-c21b10b21643",
+      "user_id": "9149d273-7d58-49a3-a8ed-469ab15816f3",
+      "email": "vijaya.me24@krct.ac.in",
+      "reg_no": "2403811711421301",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "fc6dc6ea-e818-41c4-842a-7aeb7087a567",
+      "user_id": "9a2978ef-0426-4910-86ec-91a09cffc135",
+      "email": "vinobalaji.me24@krct.ac.in",
+      "reg_no": "2403811711421303",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "a86d9478-0e90-4c54-8f3a-99eee08fb170",
+      "user_id": "873fcddf-6c1c-4f18-8e4d-a42107306f5a",
+      "email": "sakthivel.me24@krct.ac.in",
+      "reg_no": "2403811711421049",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "8fef9c14-64f3-41c4-998a-bcd469bc09ea",
+      "user_id": "5c984f3c-9e74-48e8-8e73-07e051f90377",
+      "email": "santhose.me24@krct.ac.in",
+      "reg_no": "2403811711421051",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "a3c491a5-3885-481e-bbad-0ba2fb487f68",
+      "user_id": "c1a4ab13-add9-4e09-b9d6-4e729531eabd",
+      "email": "saravanan.me24@krct.ac.in",
+      "reg_no": "2403811711421054",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "ecf0aff3-ab9b-40e8-ba17-97b2285b7ec0",
+      "user_id": "7d6196c8-93d5-4261-9d20-d2e234204e1d",
+      "email": "siva.me24@krct.ac.in",
+      "reg_no": "2403811711421056",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "c3f9530e-0e8d-4904-9a7e-2a0c59a91996",
+      "user_id": "1a10b4f0-78ef-4a98-8138-8e49144ad87f",
+      "email": "tharun.me24@krct.ac.in",
+      "reg_no": "2403811711421058",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "2614b496-ab9c-49ba-ad78-87de330db60a",
+      "user_id": "0af47e04-ca25-4ba7-b9ae-85366bcfa0e9",
+      "email": "vigneshwaran.me24@krct.ac.in",
+      "reg_no": "2403811711421061",
+      "db_deleted": true,
+      "auth_deleted": true
+    },
+    {
+      "student_id": "83929321-3a52-4d8f-973c-7d176ac41848",
+      "user_id": "f41187f5-3be4-4a5d-ad7d-499367ef7d31",
+      "email": "vijaykumar.me24@krct.ac.in",
+      "reg_no": "2403811711421302",
+      "db_deleted": true,
+      "auth_deleted": true
+    }
+  ]
+}

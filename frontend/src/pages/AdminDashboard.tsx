@@ -272,7 +272,7 @@
             <div className="space-y-6">
                 {/* Welcome card */}
                 <section className="bg-white rounded-xl shadow p-6 w-full">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div>
                             <h1 className="text-2xl font-semibold">Admin dashboard</h1>
                             {loading ? (
@@ -293,7 +293,7 @@
 
                 {/* Create Elective card */}
                 <section className="bg-white rounded-xl shadow p-6 w-full">
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 gap-2">
                         <h3 className="text-lg font-medium">Create Elective</h3>
                         <div className="text-sm text-slate-500">Add multiple rows then create</div>
                     </div>
@@ -359,7 +359,7 @@
                         </div>
                         </div>
                     </div>
-                    <div className="mt-4 flex items-center gap-3">
+                    <div className="mt-4 flex flex-wrap items-center gap-3">
                         <button onClick={addRow} disabled={creating} title="Add row" className="p-2 bg-green-600 text-white rounded">
                             <Plus className="h-5 w-5" />
                         </button>
@@ -524,70 +524,98 @@
                                 <Download className="h-4 w-4" />
                             </button>
                             <button title="Activate all" onClick={async ()=> await patchGroup(parent,'activate')} disabled={loadingElectives || !!groupLoading[parent]} className={`px-3 py-2 rounded flex items-center gap-2 ${groupLoading[parent] ? 'opacity-50 cursor-not-allowed bg-gray-200' : 'bg-green-600 text-white hover:bg-green-700'}`}>
-                                <Play className="h-4 w-4" /> Activate
+                                <Play className="h-4 w-4" /> <span className="hidden sm:inline">Activate</span>
                             </button>
 
                             <button title="Deactivate all" onClick={async ()=> await patchGroup(parent,'deactivate')} disabled={loadingElectives || !!groupLoading[parent]} className={`px-3 py-2 rounded flex items-center gap-2 ${groupLoading[parent] ? 'opacity-50 cursor-not-allowed bg-gray-200' : 'bg-yellow-500 text-white hover:bg-yellow-600'}`}>
-                                <Pause className="h-4 w-4" /> Deactivate
+                                <Pause className="h-4 w-4" /> <span className="hidden sm:inline">Deactivate</span>
                             </button>
 
                             <button title="Close polling" onClick={async ()=> await patchGroup(parent,'polling-close')} disabled={loadingElectives || !!groupLoading[parent]} className={`px-3 py-2 rounded flex items-center gap-2 ${groupLoading[parent] ? 'opacity-50 cursor-not-allowed bg-gray-200' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>
-                                <X className="h-4 w-4" /> Close Poll
+                                <X className="h-4 w-4" /> <span className="hidden sm:inline">Close Poll</span>
                             </button>
                             </div>
                         </div>
                         </div>
-
-                        <div className="mt-3 overflow-x-auto">
-                        <table className="w-full text-sm border-collapse bg-white">
-                            <thead>
-                            <tr className="text-left text-slate-600">
-                                <th className="pb-2">Code</th>
-                                <th className="pb-2">Name</th>
-                                <th className="pb-2">Year</th>
-                                <th className="pb-2">Sem</th>
-                                <th className="pb-2">Seats</th>
-                                <th className="pb-2">Filled</th>
-                                <th className="pb-2">Active</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {grouped[parent].map((e:any) => (
-                                <tr key={e.id} className="border-t border-slate-100">
-                                <td className="py-2">{e.subject_code}</td>
-                                <td className="py-2">{e.subject_name}</td>
-                                <td className="py-2">{e.parent_electives?.year ?? '-'}</td>
-                                <td className="py-2">{e.parent_electives?.sem ?? '-'}</td>
-                                <td className="py-2">{e.total_seats}</td>
-                                <td className="py-2">{e.filled_seats}</td>
-                                <td className="py-2">{e.is_active ? 'Yes' : 'No'}</td>
-                                <td className="py-2">
-                                    <div className="flex gap-2">
-                                    {e.is_active ? (
-                                        <button onClick={async ()=> await patchElective(e.id,'deactivate')} title="Deactivate" className="px-3 py-2 rounded flex items-center gap-2 bg-yellow-500 text-white">
-                                            <Pause className="h-4 w-4" /> Deactivate
-                                        </button>
-                                    ) : (
-                                        <button onClick={async ()=> await patchElective(e.id,'activate')} title="Activate" className="px-3 py-2 rounded flex items-center gap-2 bg-green-600 text-white">
-                                            <Play className="h-4 w-4" /> Activate
-                                        </button>
-                                    )}
-
-                                    {!e.polling_closed && (
-                                        <button onClick={async ()=> await patchElective(e.id,'polling-close')} title="Close polling" className="px-3 py-2 rounded flex items-center gap-2 bg-blue-600 text-white">
-                                            <X className="h-4 w-4" /> Close Poll
-                                        </button>
-                                    )}
-
-                                    <button onClick={async () => await loadElectiveStudents(e.id)} title="List students" className="p-2 bg-indigo-600 text-white rounded">
-                                        <Eye className="h-4 w-4" />
-                                    </button>
-                                    </div>
-                                </td>
+                        <div className="mt-3">
+                        {/* Desktop/table view */}
+                        <div className="hidden md:block overflow-x-auto">
+                            <table className="w-full text-sm border-collapse bg-white">
+                                <thead>
+                                <tr className="text-left text-slate-600">
+                                    <th className="pb-2">Code</th>
+                                    <th className="pb-2">Name</th>
+                                    <th className="pb-2">Year</th>
+                                    <th className="pb-2">Sem</th>
+                                    <th className="pb-2">Seats</th>
+                                    <th className="pb-2">Filled</th>
+                                    <th className="pb-2">Active</th>
+                                    <th className="pb-2">Actions</th>
                                 </tr>
+                                </thead>
+                                <tbody>
+                                {grouped[parent].map((e:any) => (
+                                    <tr key={e.id} className="border-t border-slate-100">
+                                    <td className="py-2">{e.subject_code}</td>
+                                    <td className="py-2">{e.subject_name}</td>
+                                    <td className="py-2">{e.parent_electives?.year ?? '-'}</td>
+                                    <td className="py-2">{e.parent_electives?.sem ?? '-'}</td>
+                                    <td className="py-2">{e.total_seats}</td>
+                                    <td className="py-2">{e.filled_seats}</td>
+                                    <td className="py-2">{e.is_active ? 'Yes' : 'No'}</td>
+                                    <td className="py-2">
+                                        <div className="flex flex-wrap gap-2">
+                                        {e.is_active ? (
+                                            <button onClick={async ()=> await patchElective(e.id,'deactivate')} title="Deactivate" className="px-3 py-2 rounded flex items-center gap-2 bg-yellow-500 text-white">
+                                                <Pause className="h-4 w-4" /> Deactivate
+                                            </button>
+                                        ) : (
+                                            <button onClick={async ()=> await patchElective(e.id,'activate')} title="Activate" className="px-3 py-2 rounded flex items-center gap-2 bg-green-600 text-white">
+                                                <Play className="h-4 w-4" /> Activate
+                                            </button>
+                                        )}
+
+                                        {!e.polling_closed && (
+                                            <button onClick={async ()=> await patchElective(e.id,'polling-close')} title="Close polling" className="px-3 py-2 rounded flex items-center gap-2 bg-blue-600 text-white">
+                                                <X className="h-4 w-4" /> Close Poll
+                                            </button>
+                                        )}
+
+                                        <button onClick={async () => await loadElectiveStudents(e.id)} title="List students" className="p-2 bg-indigo-600 text-white rounded">
+                                            <Eye className="h-4 w-4" />
+                                        </button>
+                                        </div>
+                                    </td>
+                                    </tr>
+                                ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Mobile/card view */}
+                        <div className="md:hidden space-y-3">
+                            {grouped[parent].map((e:any)=> (
+                                <div key={e.id} className="bg-white p-3 rounded shadow-sm">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div>
+                                            <div className="font-medium">{e.subject_code} — {e.subject_name}</div>
+                                            <div className="text-xs text-slate-500 mt-1">Year {e.parent_electives?.year ?? '-'} · Sem {e.parent_electives?.sem ?? '-'}</div>
+                                            <div className="text-xs text-slate-500">Seats: {e.total_seats} · Filled: {e.filled_seats}</div>
+                                            <div className="text-xs text-slate-500">Active: {e.is_active ? 'Yes' : 'No'}</div>
+                                        </div>
+                                        <div className="flex flex-col items-end gap-2">
+                                            {e.is_active ? (
+                                                <button onClick={async ()=> await patchElective(e.id,'deactivate')} className="text-sm px-2 py-1 bg-yellow-500 text-white rounded">Deactivate</button>
+                                            ) : (
+                                                <button onClick={async ()=> await patchElective(e.id,'activate')} className="text-sm px-2 py-1 bg-green-600 text-white rounded">Activate</button>
+                                            )}
+                                            {!e.polling_closed && <button onClick={async ()=> await patchElective(e.id,'polling-close')} className="text-sm px-2 py-1 bg-blue-600 text-white rounded">Close Poll</button>}
+                                            <button onClick={async () => await loadElectiveStudents(e.id)} className="text-sm px-2 py-1 bg-indigo-600 text-white rounded">Students</button>
+                                        </div>
+                                    </div>
+                                </div>
                             ))}
-                            </tbody>
-                        </table>
+                        </div>
                         </div>
                     </section>
                     
