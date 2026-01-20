@@ -1,6 +1,7 @@
     import React, { useEffect, useState } from 'react'
     import { supabase } from '../supabaseClient'
     import Navbar from '../components/Navbar'
+    import { RefreshCw, Plus, Download, Eye, Upload, Trash2, Play, Pause, X, FilePlus } from 'lucide-react'
 
     export default function AdminDashboard(){
     const [name, setName] = useState<string | null>(null)
@@ -55,6 +56,7 @@
     const [importErrorsList, setImportErrorsList] = useState<string[] | null>(null)
     const [, setImportingCsv] = useState(false)
     const [staffAll, setStaffAll] = useState<any[] | null>(null)
+    const [mode, setMode] = useState<'create'|'view'>('create')
 
     async function loadElectives(){
         setLoadingElectives(true)
@@ -267,35 +269,55 @@
     return (
         <div className="min-h-screen bg-slate-50">
         <Navbar role="admin" email={email} />
-        <main className="max-w-6xl mx-auto p-6">
-            <div className="bg-white rounded-xl shadow p-6">
-            <h1 className="text-2xl font-semibold mb-2">Admin dashboard</h1>
-            {loading ? (
-                <p className="text-sm text-slate-500">Loading profile...</p>
-            ) : (
-                <p className="text-lg text-slate-700">Welcome, {name ?? 'Admin'}!</p>
-            )}
-            <p className="mt-4 text-sm text-slate-500">Heavy data loads lazily after initial render.</p>
-            <div className="mt-6">
-                <button
-                onClick={loadElectives}
-                disabled={loadingElectives}
-                className="px-3 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
-                >
-                {loadingElectives ? 'Loading electives...' : 'Load electives'}
-                </button>
+        <main className="w-full p-6">
+            <div className="space-y-6">
+                {/* Welcome card */}
+                <section className="bg-white rounded-xl shadow p-6 w-full">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-2xl font-semibold">Admin dashboard</h1>
+                            {loading ? (
+                                <p className="text-sm text-slate-500">Loading profile...</p>
+                            ) : (
+                                <p className="text-lg text-slate-700">Welcome, {name ?? 'Admin'}!</p>
+                            )}
+                            <p className="mt-2 text-sm text-slate-500">Heavy data loads lazily after initial render.</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button onClick={loadElectives} disabled={loadingElectives} title="Load electives" className="p-2 bg-blue-600 text-white rounded-md">
+                                <RefreshCw className="h-5 w-5" />
+                            </button>
+                        </div>
+                    </div>
+                    {electivesError && <div className="mt-3 text-red-600 text-sm">{electivesError}</div>}
+                </section>
 
-                {electivesError && <div className="mt-3 text-red-600 text-sm">{electivesError}</div>}
+                {/* Create Elective card */}
+                <section className="bg-white rounded-xl shadow p-6 w-full">
+                    <div className="flex items-center justify-between mb-3">
+                        <div>
+                            <div className="flex items-center gap-4">
+                                <h3 className="text-lg font-medium">Electives</h3>
+                                <div className="flex bg-gray-100 rounded-lg p-1">
+                                    <button onClick={() => setMode('create')} className={`px-3 py-1 rounded ${mode === 'create' ? 'bg-white shadow' : 'text-slate-600'}`}>Create Elective</button>
+                                    <button onClick={() => setMode('view')} className={`px-3 py-1 rounded ${mode === 'view' ? 'bg-white shadow' : 'text-slate-600'}`}>View Electives</button>
+                                </div>
+                            </div>
+                            <div className="text-sm text-slate-500 mt-1">Add multiple rows then create</div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button onClick={loadElectives} disabled={loadingElectives} title="Load electives" className="p-2 bg-blue-600 text-white rounded-md">
+                                <RefreshCw className="h-5 w-5" />
+                            </button>
+                        </div>
+                    </div>
 
-                {electives && (
-                <div className="mt-4 space-y-6">
-                    {/* Create elective form */}
-                    <section className="bg-white p-4 rounded-md border">
-                    <h3 className="text-md font-medium mb-2">Create Elective</h3>
-                    <div className="grid grid-cols-2 gap-3">
+                    {mode === 'create' ? (
+                        <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                         <label className="block text-sm">Year</label>
-                        <select className="mt-1 w-full" value={createYear ?? ''} onChange={e=> setCreateYear(e.target.value ? Number(e.target.value) : null)}>
+                        <select className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" value={createYear ?? ''} onChange={e=> setCreateYear(e.target.value ? Number(e.target.value) : null)}>
                             <option value="">Select year</option>
                             <option value={1}>1</option>
                             <option value={2}>2</option>
@@ -305,168 +327,74 @@
                         </div>
                         <div>
                         <label className="block text-sm">Semester</label>
-                        <select className="mt-1 w-full" value={createSem ?? ''} onChange={e=> setCreateSem(e.target.value ? Number(e.target.value) : null)}>
+                        <select className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" value={createSem ?? ''} onChange={e=> setCreateSem(e.target.value ? Number(e.target.value) : null)}>
                             <option value="">Select sem</option>
                             {yearToSem(createYear).map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
                         </div>
                         <div>
                         <label className="block text-sm">Parent Elective</label>
-                        <select className="mt-1 w-full" value={createParentId ?? ''} onChange={e=> setCreateParentId(e.target.value || null)}>
+                        <select className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" value={createParentId ?? ''} onChange={e=> setCreateParentId(e.target.value || null)}>
                             <option value="">(none)</option>
                             {(parentOptions ?? []).map(p => <option key={p.id} value={p.id}>{p.name} ({p.year}/{p.sem})</option>)}
                         </select>
                         </div>
                         <div>
                         <label className="block text-sm">Providing Department</label>
-                        <select className="mt-1 w-full" value={providingDept ?? ''} onChange={e=> { setProvidingDept(e.target.value || null); /* auto select blocked */ }}>
+                        <select className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" value={providingDept ?? ''} onChange={e=> { setProvidingDept(e.target.value || null); /* auto select blocked */ }}>
                             <option value="">Select dept</option>
                             {(departments ?? []).map(d => <option key={d.id} value={d.id}>{shortDeptName(d.name)} — {d.name}</option>)}
                         </select>
                         </div>
                         <div>
                         <label className="block text-sm">Staff (from department)</label>
-                        <select className="mt-1 w-full" value={assignedStaffId ?? ''} onChange={e=> setAssignedStaffId(e.target.value || null)}>
+                        <select className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" value={assignedStaffId ?? ''} onChange={e=> setAssignedStaffId(e.target.value || null)}>
                             <option value="">(none)</option>
                             {(staffOptions ?? []).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                         </select>
                         </div>
                         <div>
                         <label className="block text-sm">Seats</label>
-                        <input className="mt-1 w-full" type="number" value={totalSeats} onChange={e=> setTotalSeats(Number(e.target.value))} />
+                        <input className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" type="number" value={totalSeats} onChange={e=> setTotalSeats(Number(e.target.value))} />
                         </div>
-                        <div className="col-span-2">
+                        <div className="col-span-1 md:col-span-2">
                         <label className="block text-sm">Subject name</label>
-                        <input className="mt-1 w-full" value={subjectName} onChange={e=> setSubjectName(e.target.value)} />
+                        <input className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" value={subjectName} onChange={e=> setSubjectName(e.target.value)} />
                         </div>
                         <div>
                         <label className="block text-sm">Subject code</label>
-                        <input className="mt-1 w-full" value={subjectCode} onChange={e=> setSubjectCode(e.target.value)} />
+                        <input className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" value={subjectCode} onChange={e=> setSubjectCode(e.target.value)} />
                         </div>
-                        <div className="col-span-2">
+                        <div className="col-span-1 md:col-span-2">
                         <label className="block text-sm">Block for departments</label>
                         <div className="flex flex-wrap gap-2 mt-1">
                             {(departments ?? []).map(d => (
-                            <label key={d.id} className="inline-flex items-center gap-2 text-sm">
-                                <input type="checkbox" checked={!!blockedDepts[d.id]} onChange={()=> toggleBlocked(d.id)} /> {shortDeptName(d.name)} — {d.name}
+                            <label key={d.id} className="inline-flex items-center gap-2 text-sm bg-gray-50 px-2 py-1 rounded">
+                                <input type="checkbox" checked={!!blockedDepts[d.id]} onChange={()=> toggleBlocked(d.id)} /> <span className="ml-1">{shortDeptName(d.name)} — {d.name}</span>
                             </label>
                             ))}
                         </div>
                         </div>
                     </div>
-                    <div className="mt-3 flex gap-2">
-                        <button onClick={addRow} disabled={creating} className="px-3 py-2 bg-green-600 text-white rounded">Add Row</button>
-                        <button onClick={createElectives} disabled={creating || electiveRows.length===0} className="px-3 py-2 bg-blue-600 text-white rounded">{creating ? 'Creating...' : `Create ${electiveRows.length>0?electiveRows.length:0} Elective(s)`}</button>
-                        <button onClick={()=>{ setSubjectName(''); setSubjectCode(''); setTotalSeats(0); setBlockedDepts({}); setElectiveRows([]) }} className="px-3 py-2 bg-gray-200 rounded">Reset</button>
-                    </div>
-                                        {/* CSV bulk import */}
-                                        <div className="mt-4 border-t pt-3">
-                                            <div className="flex items-center gap-3">
-                                                <button onClick={async ()=>{
-                                                    try{
-                                                        const token = (await supabase.auth.getSession()).data.session?.access_token
-                                                        const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
-                                                        const res = await fetch(`${API_BASE}/api/admin/subjects/template.xlsx`, { headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit) })
-                                                        if(!res.ok) throw new Error(await res.text())
-                                                        const blob = await res.blob()
-                                                        const url = window.URL.createObjectURL(blob)
-                                                        const a = document.createElement('a')
-                                                        a.href = url
-                                                        a.download = `subject_import_template.xlsx`
-                                                        document.body.appendChild(a)
-                                                        a.click()
-                                                        a.remove()
-                                                        window.URL.revokeObjectURL(url)
-                                                    }catch(err){ console.error(err); alert('Failed to download template: '+ String(err)) }
-                                                }} className="px-3 py-2 bg-indigo-600 text-white rounded">Download CSV template</button>
-                                                <input type="file" accept=".csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={e=> setCsvFile(e.target.files && e.target.files[0] ? e.target.files[0] : null)} />
-                                                <button onClick={async ()=>{
-                                                    if(!csvFile) return alert('Select a file first')
-                                                    setImportErrorsList(null)
-                                                    setImportPreviewRows(null)
-                                                    try{
-                                                        let rows:any[] = []
-                                                        if(csvFile.name.toLowerCase().endsWith('.xlsx')){
-                                                            const token = (await supabase.auth.getSession()).data.session?.access_token
-                                                            const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
-                                                            const fd = new FormData(); fd.append('file', csvFile)
-                                                            const res = await fetch(`${API_BASE}/api/admin/subjects/parse`, { method: 'POST', headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit), body: fd })
-                                                            if(!res.ok) throw new Error(await res.text())
-                                                            const j = await res.json(); rows = j.rows ?? []
-                                                        } else {
-                                                            const txt = await csvFile.text(); rows = parseCSV(txt)
-                                                        }
-                                                        // map department and staff names
-                                                        const deptMap = new Map((departments ?? []).map(d=>[String(d.name).toLowerCase(), d.id]))
-                                                        const staffMap = new Map((staffAll ?? []).map(s=>[String(s.name).toLowerCase(), s.id]))
-                                                        const preview:any[] = []
-                                                        const errs:string[] = []
-                                                        for(const r of rows){
-                                                            const subject_name = (r['subject_name'] || r['subject name'] || r['subjec name'] || r['subject'] || '').trim()
-                                                            const subject_code = (r['subject_code'] || r['subject code'] || r['code'] || '').trim()
-                                                            const providing_department = (r['providing_department'] || r['department'] || r['providing department'] || '').trim()
-                                                            const staff_name = (r['staff_name'] || r['staff name'] || r['staff'] || '').trim()
-                                                            const total_seats = Number(r['total_seats'] || r['seats'] || r['seat_count'] || r['total seats'] || 0)
-                                                            if(!subject_name || !subject_code || !providing_department){ errs.push('Missing required columns in a row: subject_name/subject_code/providing_department'); continue }
-                                                            const deptId = deptMap.get(providing_department.toLowerCase()) ?? Array.from(deptMap.entries()).find(([k])=> providing_department.toLowerCase().includes(k))?.[1] ?? null
-                                                            const staffId = staffMap.get(staff_name.toLowerCase()) ?? null
-                                                            if(!deptId) errs.push(`Department not found: ${providing_department}`)
-                                                            if(staff_name && !staffId) errs.push(`Staff not found: ${staff_name}`)
-                                                            preview.push({ subject_name, subject_code, providing_department_id: deptId, staff_id: staffId, total_seats, parent_elective_id: createParentId, subject_year: createYear, subject_semester: createSem })
-                                                        }
-                                                        setImportPreviewRows(preview)
-                                                        setImportErrorsList(errs.length>0?errs:null)
-                                                    }catch(e:any){ console.error(e); alert('Failed to parse file: '+ String(e)) }
-                                                }} className="px-3 py-2 bg-emerald-600 text-white rounded">Preview File</button>
-                                                <button onClick={async ()=>{
-                                                    if(!importPreviewRows || importPreviewRows.length === 0) return alert('No preview rows to import')
-                                                    setImportingCsv(true)
-                                                    try{
-                                                        const token = (await supabase.auth.getSession()).data.session?.access_token
-                                                        const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
-                                                        // filter out rows missing dept id
-                                                        const rowsToSend = importPreviewRows.map((r:any)=> ({ subject_name: r.subject_name, subject_code: r.subject_code, providing_department_id: r.providing_department_id, total_seats: r.total_seats, staff_id: r.staff_id }))
-                                                        const res = await fetch(`${API_BASE}/api/admin/electives/bulk`, { method: 'POST', headers: ({ Authorization: token ? `Bearer ${token}` : '', 'Content-Type': 'application/json' } as HeadersInit), body: JSON.stringify({ parent_elective_id: createParentId, rows: rowsToSend }) })
-                                                        if(!res.ok) throw new Error(await res.text())
-                                                        const j = await res.json()
-                                                        setElectives(prev => [...(j.created ?? []), ...(prev ?? [])])
-                                                        if(j.errors && j.errors.length>0) setImportErrorsList((j.errors as any).map((e:any)=> JSON.stringify(e)))
-                                                        else setImportErrorsList(null)
-                                                        setImportPreviewRows(null)
-                                                        setCsvFile(null)
-                                                        alert('CSV import complete')
-                                                    }catch(e:any){ console.error(e); alert('Import failed: '+ String(e)) }
-                                                    finally{ setImportingCsv(false) }
-                                                }} className="px-3 py-2 bg-blue-700 text-white rounded">Import Previewed Rows</button>
-                                            </div>
-                                            {importErrorsList && <div className="mt-2 text-sm text-red-600">{importErrorsList.map((er,i)=> <div key={i}>{er}</div>)}</div>}
-                                            {importPreviewRows && importPreviewRows.length > 0 && (
-                                                <div className="mt-2">
-                                                    <h4 className="text-sm font-medium">Preview ({importPreviewRows.length})</h4>
-                                                    <ul className="mt-2 space-y-1 text-sm">
-                                                        {importPreviewRows.map((r:any, i)=> (
-                                                            <li key={i} className="p-2 bg-gray-50 rounded">{r.subject_code} — {r.subject_name} <span className="text-xs text-slate-500">({departments?.find(d=>d.id===r.providing_department_id)?.name ?? 'DEPT?'}{r.staff_id ? ' — '+(staffAll?.find(s=>s.id===r.staff_id)?.name ?? '') : ''})</span></li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-                                            )}
-                                        </div>
-                    {electiveRows.length > 0 && (
-                        <div className="mt-3">
-                        <h4 className="text-sm font-medium">Pending rows</h4>
-                        <ul className="mt-2 space-y-2">
-                            {electiveRows.map((r, idx) => (
-                            <li key={idx} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                                <div className="text-sm">{r.subject_code} — {r.subject_name} <span className="text-xs text-slate-500">({shortDeptName(departments?.find(d=>d.id===r.providing_department_id)?.name ?? '')} {departments?.find(d=>d.id===r.providing_department_id)?.name ? '— '+departments?.find(d=>d.id===r.providing_department_id)?.name : ''})</span></div>
-                                <div className="flex gap-2">
-                                <button onClick={()=> setElectiveRows(prev => prev.filter((_,i)=> i!==idx))} className="px-2 py-1 bg-red-500 text-white rounded text-xs">Remove</button>
-                                </div>
-                            </li>
-                            ))}
-                        </ul>
-                        </div>
-                    )}
-                    </section>
+                    <div className="mt-4 flex items-center gap-3">
+                        <button onClick={addRow} disabled={creating} title="Add row" className="p-2 bg-green-600 text-white rounded">
+                            <Plus className="h-5 w-5" />
+                        </button>
+                        <button onClick={createElectives} disabled={creating || electiveRows.length===0} title="Create electives" className="p-2 bg-blue-600 text-white rounded">
+                            <FilePlus className="h-5 w-5" />
+                        </button>
+                        <button onClick={()=>{ setSubjectName(''); setSubjectCode(''); setTotalSeats(0); setBlockedDepts({}); setElectiveRows([]) }} title="Reset" className="p-2 bg-gray-200 rounded">
+                            <X className="h-5 w-5" />
+                        </button>
+                        <div className="ml-auto flex items-center gap-2">
+                            <button title="Download template" onClick={async ()=>{ try{ const token = (await supabase.auth.getSession()).data.session?.access_token; const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''; const res = await fetch(`${API_BASE}/api/admin/subjects/template.xlsx`, { headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit) }); if(!res.ok) throw new Error(await res.text()); const blob = await res.blob(); const url = window.URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `subject_import_template.xlsx`; document.body.appendChild(a); a.click(); a.remove(); window.URL.revokeObjectURL(url); }catch(err){ console.error(err); alert('Failed to download template: '+ String(err)) } }} className="p-2 bg-indigo-600 text-white rounded">
+                                <Download className="h-4 w-4" />
+                            </button>
+                            <input id="file-input" className="hidden" type="file" accept=".csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={e=> setCsvFile(e.target.files && e.target.files[0] ? e.target.files[0] : null)} />
+                            <label htmlFor="file-input" title="Choose file" className="p-2 bg-emerald-600 text-white rounded cursor-pointer">
+                                <Upload className="h-4 w-4" />
+                            </label>
+                            <button onClick={async ()=>{ if(!csvFile) return alert('Select a file first'); setImportErrorsList(null); setImportPreviewRows(null); try{ let rows:any[] = []; if(csvFile.name.toLowerCase().endsWith('.xlsx')){ const token = (await supabase.auth.getSession()).data.session?.access_token; const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''; const fd = new FormData(); fd.append('file', csvFile); const res = await fetch(`${API_BASE}/api/admin/subjects/parse`, { method: 'POST', headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit), body: fd }); if(!res.ok) throw new Error(await res.text()); const j = await res.json(); rows = j.rows ?? [] } else { const txt = await csvFile.text(); rows = parseCSV(txt) } const deptMap = new Map((departments ?? []).map(d=>[String(d.name).toLowerCase(), d.id])); const staffMap = new Map((staffAll ?? []).map(s=>[String(s.name).toLowerCase(), s.id])); const preview:any[] = []; const errs:string[] = []; for(const r of rows){ const subject_name = (r['subject_name'] || r['subject name'] || r['subjec name'] || r['subject'] || '').trim(); const subject_code = (r['subject_code'] || r['subject code'] || r['code'] || '').trim(); const providing_department = (r['providing_department'] || r['department'] || r['providing department'] || '').trim(); const staff_name = (r['staff_name'] || r['staff name'] || r['staff'] || '').trim(); const total_seats = Number(r['total_seats'] || r['seats'] || r['seat_count'] || r['total seats'] || 0); if(!subject_name || !subject_code || !providing_department){ errs.push('Missing required columns in a row: subject_name/subject_code/providing_department'); continue } const deptId = deptMap.get(providing_department.toLowerCase()) ?? Array.from(deptMap.entries()).find(([k])=> providing_department.toLowerCase().includes(k))?.[1] ?? null; const staffId = staffMap.get(staff_name.toLowerCase()) ?? null; if(!deptId) errs.push(`Department not found: ${providing_department}`); if(staff_name && !staffId) errs.push(`Staff not found: ${staff_name}`); preview.push({ subject_name, subject_code, providing_department_id: deptId, staff_id: staffId, total_seats, parent_elective_id: createParentId, subject_year: createYear, subject_semester: createSem }) } setImportPreviewRows(preview); setImportErrorsList(errs.length>0?errs:null) }catch(e:any){ console.error(e); alert('Failed to parse file: '+ String(e)) } }} className="p-2 bg-emerald-600 text-white rounded" title="Preview file">
                     {Object.keys(grouped).map(parent => (
                     <section key={parent} className="bg-slate-50 p-4 rounded-md">
                         <div className="flex items-center justify-between">
@@ -474,8 +402,7 @@
                         <div className="flex items-center gap-3">
                             <div className="text-sm text-slate-500">Showing {grouped[parent].length} electives</div>
                             <div className="flex items-center gap-2">
-                            <button
-                                onClick={async () => {
+                            <button title="Download CSV" onClick={async () => {
                                 try{
                                     const token = (await supabase.auth.getSession()).data.session?.access_token
                                     const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
@@ -495,26 +422,20 @@
                                     console.error(err)
                                     alert('Failed to download CSV: '+ String(err))
                                 }
-                                }}
-                                className="px-2 py-1 bg-gray-700 text-white rounded text-xs"
-                            >Download</button>
-                            <button
-                                onClick={async ()=> await patchGroup(parent,'activate')}
-                                disabled={loadingElectives || !!groupLoading[parent]}
-                                className={`px-2 py-1 rounded text-xs ${groupLoading[parent] ? 'opacity-50 cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700'}`}
-                            >Activate All</button>
+                                }} className="p-2 bg-gray-700 text-white rounded">
+                                <Download className="h-4 w-4" />
+                            </button>
+                            <button title="Activate all" onClick={async ()=> await patchGroup(parent,'activate')} disabled={loadingElectives || !!groupLoading[parent]} className={`px-3 py-2 rounded flex items-center gap-2 ${groupLoading[parent] ? 'opacity-50 cursor-not-allowed bg-gray-200' : 'bg-green-600 text-white hover:bg-green-700'}`}>
+                                <Play className="h-4 w-4" /> Activate
+                            </button>
 
-                            <button
-                                onClick={async ()=> await patchGroup(parent,'deactivate')}
-                                disabled={loadingElectives || !!groupLoading[parent]}
-                                className={`px-2 py-1 rounded text-xs ${groupLoading[parent] ? 'opacity-50 cursor-not-allowed' : 'bg-yellow-500 text-white hover:bg-yellow-600'}`}
-                            >Deactivate All</button>
+                            <button title="Deactivate all" onClick={async ()=> await patchGroup(parent,'deactivate')} disabled={loadingElectives || !!groupLoading[parent]} className={`px-3 py-2 rounded flex items-center gap-2 ${groupLoading[parent] ? 'opacity-50 cursor-not-allowed bg-gray-200' : 'bg-yellow-500 text-white hover:bg-yellow-600'}`}>
+                                <Pause className="h-4 w-4" /> Deactivate
+                            </button>
 
-                            <button
-                                onClick={async ()=> await patchGroup(parent,'polling-close')}
-                                disabled={loadingElectives || !!groupLoading[parent]}
-                                className={`px-2 py-1 rounded text-xs ${groupLoading[parent] ? 'opacity-50 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
-                            >Close Polling</button>
+                            <button title="Close polling" onClick={async ()=> await patchGroup(parent,'polling-close')} disabled={loadingElectives || !!groupLoading[parent]} className={`px-3 py-2 rounded flex items-center gap-2 ${groupLoading[parent] ? 'opacity-50 cursor-not-allowed bg-gray-200' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>
+                                <X className="h-4 w-4" /> Close Poll
+                            </button>
                             </div>
                         </div>
                         </div>
@@ -545,28 +466,24 @@
                                 <td className="py-2">
                                     <div className="flex gap-2">
                                     {e.is_active ? (
-                                        <button
-                                        onClick={async ()=> await patchElective(e.id,'deactivate')}
-                                        className="px-2 py-1 bg-yellow-500 text-white rounded text-xs"
-                                        >Deactivate</button>
+                                        <button onClick={async ()=> await patchElective(e.id,'deactivate')} title="Deactivate" className="px-3 py-2 rounded flex items-center gap-2 bg-yellow-500 text-white">
+                                            <Pause className="h-4 w-4" /> Deactivate
+                                        </button>
                                     ) : (
-                                        <button
-                                        onClick={async ()=> await patchElective(e.id,'activate')}
-                                        className="px-2 py-1 bg-green-600 text-white rounded text-xs"
-                                        >Activate</button>
+                                        <button onClick={async ()=> await patchElective(e.id,'activate')} title="Activate" className="px-3 py-2 rounded flex items-center gap-2 bg-green-600 text-white">
+                                            <Play className="h-4 w-4" /> Activate
+                                        </button>
                                     )}
 
                                     {!e.polling_closed && (
-                                        <button
-                                        onClick={async ()=> await patchElective(e.id,'polling-close')}
-                                        className="px-2 py-1 bg-blue-600 text-white rounded text-xs"
-                                        >Close Polling</button>
+                                        <button onClick={async ()=> await patchElective(e.id,'polling-close')} title="Close polling" className="px-3 py-2 rounded flex items-center gap-2 bg-blue-600 text-white">
+                                            <X className="h-4 w-4" /> Close Poll
+                                        </button>
                                     )}
 
-                                    <button
-                                        onClick={async () => await loadElectiveStudents(e.id)}
-                                        className="px-2 py-1 bg-indigo-600 text-white rounded text-xs"
-                                    >List</button>
+                                    <button onClick={async () => await loadElectiveStudents(e.id)} title="List students" className="p-2 bg-indigo-600 text-white rounded">
+                                        <Eye className="h-4 w-4" />
+                                    </button>
                                     </div>
                                 </td>
                                 </tr>
@@ -578,8 +495,6 @@
                     
                     ))}
                 </div>
-                )}
-            </div>
 
             {/* Import Students section removed per request */}
 
@@ -626,8 +541,6 @@
                 </div>
                 </div>
             )}
-
-            </div>
         </main>
         </div>
     )

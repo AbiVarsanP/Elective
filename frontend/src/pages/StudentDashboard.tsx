@@ -25,7 +25,6 @@ export default function StudentDashboard() {
   const [registering, setRegistering] = useState(false)
   const [registrationMessage, setRegistrationMessage] = useState<string | null>(null)
 
-  const [debugInfo, setDebugInfo] = useState<any | null>(null)
 
   const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
 
@@ -211,30 +210,7 @@ export default function StudentDashboard() {
           </div>
         </section>
 
-        {/* Debug */}
-        <section className="bg-white rounded-xl shadow p-5">
-          <div className="flex items-center gap-2 mb-2">
-            <Bug className="h-4 w-4 text-slate-500" />
-            <h3 className="text-sm font-medium">Debug</h3>
-          </div>
-
-          <button
-            onClick={async () => {
-              const headers = await authHeader()
-              const res = await fetch(`${API_BASE}/api/debug/me`, { headers })
-              setDebugInfo(await res.json())
-            }}
-            className="text-xs px-3 py-1 bg-slate-700 text-white rounded"
-          >
-            Fetch
-          </button>
-
-          {debugInfo && (
-            <pre className="mt-3 text-xs bg-slate-100 p-3 rounded overflow-auto">
-              {JSON.stringify(debugInfo, null, 2)}
-            </pre>
-          )}
-        </section>
+        {/* debug UI removed */}
       </main>
     </div>
   )
