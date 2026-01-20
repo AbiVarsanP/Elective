@@ -29,14 +29,25 @@ export default function StaffDashboard() {
     return (token ? { Authorization: `Bearer ${token}` } : {}) as HeadersInit
   }
 
+  const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
+
   useEffect(() => {
     async function loadProfile() {
       setLoading(true)
       const headers = await authHeader()
-      const res = await fetch('/api/staff/profile', { headers })
+      const res = await fetch(`${API_BASE}/api/staff/profile`, { headers })
       if (res.ok) {
-        const data = await res.json()
-        setName(data.name ?? null)
+        const contentType = res.headers.get('content-type') || ''
+        if (contentType.includes('application/json')){
+          const data = await res.json()
+          setName(data.name ?? null)
+        } else {
+          // non-json response (HTML error from host) — surface friendly message
+          const txt = await res.text()
+          setName(null)
+          setElectivesError('Server returned an unexpected response while loading profile')
+          console.error('Non-JSON profile response', txt)
+        }
       }
       const session = (await supabase.auth.getSession()).data.session
       setEmail(session?.user.email ?? null)
@@ -50,8 +61,15 @@ export default function StaffDashboard() {
     setElectivesError(null)
     try {
       const headers = await authHeader()
-      const res = await fetch('/api/staff/electives', { headers })
-      if (!res.ok) throw new Error(await res.text())
+      const res = await fetch(`${API_BASE}/api/staff/electives`, { headers })
+      if (!res.ok) {
+        const ct = res.headers.get('content-type') || ''
+        const body = await res.text()
+        if(ct.includes('text/html')){
+          throw new Error('Server returned HTML error — check API_URL or CORS')
+        }
+        throw new Error(body)
+      }
       const json = await res.json()
       setElectives(json.electives ?? [])
     } catch (e: any) {
@@ -69,8 +87,15 @@ export default function StaffDashboard() {
 
     try {
       const headers = await authHeader()
-      const res = await fetch(`/api/staff/electives/${electiveId}/students`, { headers })
-      if (!res.ok) throw new Error(await res.text())
+      const res = await fetch(`${API_BASE}/api/staff/electives/${electiveId}/students`, { headers })
+      if (!res.ok) {
+        const ct = res.headers.get('content-type') || ''
+        const body = await res.text()
+        if(ct.includes('text/html')){
+          throw new Error('Server returned HTML error — check API_URL or CORS')
+        }
+        throw new Error(body)
+      }
       const json = await res.json()
       setStudentsList(json.students ?? json)
     } catch (e: any) {
@@ -83,8 +108,15 @@ export default function StaffDashboard() {
   async function downloadElectiveCSV(electiveId: string) {
     try {
       const headers = await authHeader()
-      const res = await fetch(`/api/staff/electives/${electiveId}/download`, { headers })
-      if (!res.ok) throw new Error(await res.text())
+      const res = await fetch(`${API_BASE}/api/staff/electives/${electiveId}/download`, { headers })
+      if (!res.ok) {
+        const ct = res.headers.get('content-type') || ''
+        const body = await res.text()
+        if(ct.includes('text/html')){
+          throw new Error('Server returned HTML error — check API_URL or CORS')
+        }
+        throw new Error(body)
+      }
 
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
