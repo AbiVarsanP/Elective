@@ -29,9 +29,9 @@ export default function StudentDashboard() {
 
   const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
 
-  async function authHeader() {
+  async function authHeader(): Promise<HeadersInit> {
     const token = (await supabase.auth.getSession()).data.session?.access_token
-    return token ? { Authorization: `Bearer ${token}` } : {}
+    return (token ? { Authorization: `Bearer ${token}` } : {}) as HeadersInit
   }
 
   useEffect(() => {

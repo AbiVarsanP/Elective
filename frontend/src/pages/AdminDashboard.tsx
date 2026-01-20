@@ -12,7 +12,7 @@
         setLoading(true)
         const token = (await supabase.auth.getSession()).data.session?.access_token
         const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
-        const res = await fetch(`${API_BASE}/api/admin/profile`, { headers: { Authorization: token ? `Bearer ${token}` : '' } })
+        const res = await fetch(`${API_BASE}/api/admin/profile`, { headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit) })
         if(res.ok){
             const data = await res.json()
             setName(data.name ?? null)
@@ -30,11 +30,7 @@
     const [loadingElectives, setLoadingElectives] = useState(false)
     const [electivesError, setElectivesError] = useState<string | null>(null)
     const [groupLoading, setGroupLoading] = useState<Record<string, boolean>>({})
-    const [importing, setImporting] = useState(false)
-    const [csvText, setCsvText] = useState<string | null>(null)
-    const [parsedRows, setParsedRows] = useState<any[] | null>(null)
-    const [importResults, setImportResults] = useState<any[] | null>(null)
-    const [showRawIndex, setShowRawIndex] = useState<number | null>(null)
+    
     const [studentsModalOpen, setStudentsModalOpen] = useState(false)
     const [studentsModalLoading, setStudentsModalLoading] = useState(false)
     const [studentsModalError, setStudentsModalError] = useState<string | null>(null)
@@ -57,7 +53,7 @@
     const [csvFile, setCsvFile] = useState<File | null>(null)
     const [importPreviewRows, setImportPreviewRows] = useState<any[] | null>(null)
     const [importErrorsList, setImportErrorsList] = useState<string[] | null>(null)
-    const [importingCsv, setImportingCsv] = useState(false)
+    const [, setImportingCsv] = useState(false)
     const [staffAll, setStaffAll] = useState<any[] | null>(null)
 
     async function loadElectives(){
@@ -66,7 +62,7 @@
         try{
         const token = (await supabase.auth.getSession()).data.session?.access_token
             const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
-            const res = await fetch(`${API_BASE}/api/admin/electives`, { headers: { Authorization: token ? `Bearer ${token}` : '' } })
+            const res = await fetch(`${API_BASE}/api/admin/electives`, { headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit) })
         if(!res.ok){
             const txt = await res.text()
             throw new Error(txt || 'Failed to load electives')
@@ -85,7 +81,7 @@
         const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
         const res = await fetch(`${API_BASE}/api/admin/electives/${id}/${action}`, {
             method: 'PATCH',
-            headers: { Authorization: token ? `Bearer ${token}` : '', 'Content-Type': 'application/json' }
+            headers: ({ Authorization: token ? `Bearer ${token}` : '', 'Content-Type': 'application/json' } as HeadersInit)
         })
         if(!res.ok){
             const txt = await res.text()
@@ -109,7 +105,7 @@
         const encoded = encodeURIComponent(parent)
         const res = await fetch(`${API_BASE}/api/admin/electives/group/${encoded}/${action}`, {
             method: 'PATCH',
-            headers: { Authorization: token ? `Bearer ${token}` : '', 'Content-Type': 'application/json' }
+            headers: ({ Authorization: token ? `Bearer ${token}` : '', 'Content-Type': 'application/json' } as HeadersInit)
         })
         if(!res.ok){
             const txt = await res.text()
@@ -136,7 +132,7 @@
         try{
         const token = (await supabase.auth.getSession()).data.session?.access_token
         const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
-        const res = await fetch(`${API_BASE}/api/admin/electives/${encodeURIComponent(electiveId)}/students`, { headers: { Authorization: token ? `Bearer ${token}` : '' } })
+        const res = await fetch(`${API_BASE}/api/admin/electives/${encodeURIComponent(electiveId)}/students`, { headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit) })
         if(!res.ok){
             const txt = await res.text()
             throw new Error(txt || 'Failed to load students')
@@ -207,21 +203,21 @@
         const token = (await supabase.auth.getSession()).data.session?.access_token
         const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
         // departments
-        const dres = await fetch(`${API_BASE}/api/admin/departments`, { headers: { Authorization: token ? `Bearer ${token}` : '' } })
+        const dres = await fetch(`${API_BASE}/api/admin/departments`, { headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit) })
         if(dres.ok){ const jd = await dres.json(); setDepartments(jd.departments ?? []) }
         // parent options for selected year/sem
         if(createYear && createSem){
-            const pres = await fetch(`${API_BASE}/api/admin/parent_electives?year=${createYear}&sem=${createSem}`, { headers: { Authorization: token ? `Bearer ${token}` : '' } })
+            const pres = await fetch(`${API_BASE}/api/admin/parent_electives?year=${createYear}&sem=${createSem}`, { headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit) })
             if(pres.ok){ const pj = await pres.json(); setParentOptions(pj.parent_electives ?? []) }
         } else setParentOptions([])
             // staff options for providingDept
         if(providingDept){
-            const sres = await fetch(`${API_BASE}/api/admin/staff?department_id=${encodeURIComponent(providingDept)}`, { headers: { Authorization: token ? `Bearer ${token}` : '' } })
+            const sres = await fetch(`${API_BASE}/api/admin/staff?department_id=${encodeURIComponent(providingDept)}`, { headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit) })
             if(sres.ok){ const sj = await sres.json(); setStaffOptions(sj.staff ?? []) }
         } else setStaffOptions([])
             // also fetch all staff for CSV import mapping if not loaded
             if(!staffAll){
-                const allRes = await fetch(`${API_BASE}/api/admin/staff`, { headers: { Authorization: token ? `Bearer ${token}` : '' } })
+                const allRes = await fetch(`${API_BASE}/api/admin/staff`, { headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit) })
                 if(allRes.ok){ const aj = await allRes.json(); setStaffAll(aj.staff ?? []) }
             }
         }catch(e){ console.error('loadCreateMeta failed', e) }
@@ -235,7 +231,7 @@
 
     async function addRow(){
         if(!subjectName || !subjectCode || !providingDept) return alert('Subject, code and providing department required for row')
-        setElectiveRows(prev => [...prev, { subject_name: subjectName, subject_code: subjectCode, providing_department_id: providingDept, total_seats: totalSeats, staff_id: assignedStaffId }])
+        setElectiveRows(prev => [...prev, { subject_name: subjectName, subject_code: subjectCode, providing_department_id: providingDept, total_seats: totalSeats, staff_id: assignedStaffId, parent_elective_id: createParentId, subject_year: createYear, subject_semester: createSem }])
         setSubjectName(''); setSubjectCode(''); setTotalSeats(0); setAssignedStaffId(null)
     }
 
@@ -245,9 +241,9 @@
         try{
         const token = (await supabase.auth.getSession()).data.session?.access_token
         const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
-        const blocked = Object.entries(blockedDepts).filter(([k,v])=>v).map(([k])=>k)
+        const blocked = Object.entries(blockedDepts).filter(([,v])=>v).map(([k])=>k)
         const body = { parent_elective_id: createParentId, rows: electiveRows, blocked_department_ids: blocked }
-        const res = await fetch(`${API_BASE}/api/admin/electives/bulk`, { method: 'POST', headers: { Authorization: token ? `Bearer ${token}` : '', 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        const res = await fetch(`${API_BASE}/api/admin/electives/bulk`, { method: 'POST', headers: ({ Authorization: token ? `Bearer ${token}` : '', 'Content-Type': 'application/json' } as HeadersInit), body: JSON.stringify(body) })
         if(!res.ok) throw new Error(await res.text())
         const j = await res.json()
         // merge created electives
@@ -370,7 +366,7 @@
                                                     try{
                                                         const token = (await supabase.auth.getSession()).data.session?.access_token
                                                         const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
-                                                        const res = await fetch(`${API_BASE}/api/admin/subjects/template.xlsx`, { headers: { Authorization: token ? `Bearer ${token}` : '' } })
+                                                        const res = await fetch(`${API_BASE}/api/admin/subjects/template.xlsx`, { headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit) })
                                                         if(!res.ok) throw new Error(await res.text())
                                                         const blob = await res.blob()
                                                         const url = window.URL.createObjectURL(blob)
@@ -394,7 +390,7 @@
                                                             const token = (await supabase.auth.getSession()).data.session?.access_token
                                                             const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
                                                             const fd = new FormData(); fd.append('file', csvFile)
-                                                            const res = await fetch(`${API_BASE}/api/admin/subjects/parse`, { method: 'POST', headers: { Authorization: token ? `Bearer ${token}` : '' }, body: fd })
+                                                            const res = await fetch(`${API_BASE}/api/admin/subjects/parse`, { method: 'POST', headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit), body: fd })
                                                             if(!res.ok) throw new Error(await res.text())
                                                             const j = await res.json(); rows = j.rows ?? []
                                                         } else {
@@ -416,7 +412,7 @@
                                                             const staffId = staffMap.get(staff_name.toLowerCase()) ?? null
                                                             if(!deptId) errs.push(`Department not found: ${providing_department}`)
                                                             if(staff_name && !staffId) errs.push(`Staff not found: ${staff_name}`)
-                                                            preview.push({ subject_name, subject_code, providing_department_id: deptId, staff_id: staffId, total_seats })
+                                                            preview.push({ subject_name, subject_code, providing_department_id: deptId, staff_id: staffId, total_seats, parent_elective_id: createParentId, subject_year: createYear, subject_semester: createSem })
                                                         }
                                                         setImportPreviewRows(preview)
                                                         setImportErrorsList(errs.length>0?errs:null)
@@ -430,7 +426,7 @@
                                                         const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
                                                         // filter out rows missing dept id
                                                         const rowsToSend = importPreviewRows.map((r:any)=> ({ subject_name: r.subject_name, subject_code: r.subject_code, providing_department_id: r.providing_department_id, total_seats: r.total_seats, staff_id: r.staff_id }))
-                                                        const res = await fetch(`${API_BASE}/api/admin/electives/bulk`, { method: 'POST', headers: { Authorization: token ? `Bearer ${token}` : '', 'Content-Type': 'application/json' }, body: JSON.stringify({ parent_elective_id: createParentId, rows: rowsToSend }) })
+                                                        const res = await fetch(`${API_BASE}/api/admin/electives/bulk`, { method: 'POST', headers: ({ Authorization: token ? `Bearer ${token}` : '', 'Content-Type': 'application/json' } as HeadersInit), body: JSON.stringify({ parent_elective_id: createParentId, rows: rowsToSend }) })
                                                         if(!res.ok) throw new Error(await res.text())
                                                         const j = await res.json()
                                                         setElectives(prev => [...(j.created ?? []), ...(prev ?? [])])
@@ -484,7 +480,7 @@
                                     const token = (await supabase.auth.getSession()).data.session?.access_token
                                     const API_BASE = (import.meta.env.VITE_API_URL as string) ?? ''
                                     const enc = encodeURIComponent(parent)
-                                    const res = await fetch(`${API_BASE}/api/admin/electives/group/${enc}/download`, { headers: { Authorization: token ? `Bearer ${token}` : '' } })
+                                    const res = await fetch(`${API_BASE}/api/admin/electives/group/${enc}/download`, { headers: ({ Authorization: token ? `Bearer ${token}` : '' } as HeadersInit) })
                                     if(!res.ok) throw new Error(await res.text())
                                     const blob = await res.blob()
                                     const url = window.URL.createObjectURL(blob)

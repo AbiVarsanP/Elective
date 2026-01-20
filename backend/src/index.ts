@@ -165,7 +165,12 @@ app.post('/api/admin/electives/bulk', requireAdmin, async (req, res) =>{
           is_active: true,
           polling_closed: false
         }
-        if(parent_elective_id) insertObj.parent_elective_id = parent_elective_id
+        // prefer per-row parent id if provided, otherwise use outer parent_elective_id
+        const rowParent = r.parent_elective_id ?? parent_elective_id
+        if(rowParent) insertObj.parent_elective_id = rowParent
+        // accept optional subject_year/subject_semester (kept for clarity, not required by schema)
+        if(r.subject_year) insertObj.subject_year = r.subject_year
+        if(r.subject_semester) insertObj.subject_semester = r.subject_semester
 
         const { data: inserted, error: insErr } = await supabaseService.from('electives').insert([insertObj]).select().maybeSingle()
         if(insErr){ errors.push({ row: r, error: insErr.message }); continue }
@@ -194,7 +199,7 @@ app.post('/api/admin/electives/bulk', requireAdmin, async (req, res) =>{
 
 // Admin: download CSV for a parent group (subjects + students)
 app.get('/api/admin/electives/group/:parent/download', requireAdmin, async (req, res) =>{
-  const parent = req.params.parent
+  const parent = String(req.params.parent)
   try{
     // parent may be 'Other', a parent_elective id (uuid), or a parent name.
     let electivesQuery
@@ -264,18 +269,20 @@ app.get('/api/admin/electives/group/:parent/download', requireAdmin, async (req,
     for(const e of (electives ?? [])){
       const sidList = electToStudents[String(e.id)] ?? []
       if(sidList.length === 0){
-        const parentName = e.parent_electives ? e.parent_electives.name : ''
-        const parentYear = e.parent_electives ? e.parent_electives.year : ''
-        const parentSem = e.parent_electives ? e.parent_electives.sem : ''
+        const parentObj = Array.isArray(e.parent_electives) ? e.parent_electives[0] : e.parent_electives
+        const parentName = parentObj ? parentObj.name : ''
+        const parentYear = parentObj ? parentObj.year : ''
+        const parentSem = parentObj ? parentObj.sem : ''
         const row = [e.id, parentName ?? '', e.subject_code ?? '', e.subject_name ?? '', parentYear ?? '', parentSem ?? '', '', '', '', '', '', '', '']
         lines.push(row.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','))
       } else {
         for(const sid of sidList){
           const s = studentMap[String(sid)]
           const deptName = s?.department_id ? deptMap[String(s.department_id)] ?? '' : ''
-          const parentName = e.parent_electives ? e.parent_electives.name : ''
-          const parentYear = e.parent_electives ? e.parent_electives.year : ''
-          const parentSem = e.parent_electives ? e.parent_electives.sem : ''
+          const parentObj = Array.isArray(e.parent_electives) ? e.parent_electives[0] : e.parent_electives
+          const parentName = parentObj ? parentObj.name : ''
+          const parentYear = parentObj ? parentObj.year : ''
+          const parentSem = parentObj ? parentObj.sem : ''
           const row = [e.id, parentName ?? '', e.subject_code ?? '', e.subject_name ?? '', parentYear ?? '', parentSem ?? '', s?.id ?? '', s?.reg_no ?? '', s?.name ?? '', s?.year ?? '', s?.semester ?? '', s?.section ?? '', deptName, s?.email ?? '']
           lines.push(row.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','))
         }
@@ -378,8 +385,8 @@ app.get('/api/admin/subjects/template.xlsx', requireAdmin, async (req, res) =>{
     for(let r=2; r<=maxRows; r++){
       const deptCell = `C${r}`
       const staffCell = `D${r}`
-      sheet.dataValidations.add(deptCell, { type: 'list', allowBlank: true, formulae: [`Lists!$A$1:$A$${deptNames.length || 1}`] })
-      sheet.dataValidations.add(staffCell, { type: 'list', allowBlank: true, formulae: [`Lists!$B$1:$B$${staffNames.length || 1}`] })
+      ;(sheet as any).dataValidations.add(deptCell, { type: 'list', allowBlank: true, formulae: [`Lists!$A$1:$A$${deptNames.length || 1}`] })
+      ;(sheet as any).dataValidations.add(staffCell, { type: 'list', allowBlank: true, formulae: [`Lists!$B$1:$B$${staffNames.length || 1}`] })
     }
 
     const buf = await workbook.xlsx.writeBuffer()
@@ -395,9 +402,10 @@ app.get('/api/admin/subjects/template.xlsx', requireAdmin, async (req, res) =>{
 // Parse uploaded XLSX (or CSV) and return rows as JSON for preview
 app.post('/api/admin/subjects/parse', requireAdmin, upload.single('file'), async (req, res) =>{
   try{
-    if(!req.file) return res.status(400).json({ error: 'no file uploaded' })
-    const filename = req.file.originalname || ''
-    const buf = req.file.buffer
+    const uploaded = (req as any).file
+    if(!uploaded) return res.status(400).json({ error: 'no file uploaded' })
+    const filename = uploaded.originalname || ''
+    const buf = uploaded.buffer
     const ext = filename.split('.').pop()?.toLowerCase() ?? ''
     if(ext === 'csv' || filename.endsWith('.csv')){
       const text = buf.toString('utf-8')
@@ -408,10 +416,10 @@ app.post('/api/admin/subjects/parse', requireAdmin, upload.single('file'), async
         res.push(cur); return res.map(s=>s.trim())
       }
       const cleaned = text.replace(/\r/g,'')
-      const lines = cleaned.split('\n').map(l=>l.trim()).filter(l=>l.length>0)
+      const lines = cleaned.split('\n').map((l:string)=>l.trim()).filter((l:string)=>l.length>0)
       if(lines.length===0) return res.json({ rows: [] })
       const header = parseLine(lines[0])
-      const rows = lines.slice(1).map(line=>{ const vals = parseLine(line); const obj:any={}; header.forEach((h,i)=> obj[h]=vals[i]??''); return obj })
+      const rows = lines.slice(1).map((line:string)=>{ const vals = parseLine(line); const obj:any={}; header.forEach((h,i)=> obj[h]=vals[i]??''); return obj })
       return res.json({ rows })
     }
 
@@ -423,14 +431,15 @@ app.post('/api/admin/subjects/parse', requireAdmin, upload.single('file'), async
     // read rows assuming first row is header
     const rows:any[] = []
     const headerRow = sheet.getRow(1)
-    const headers = headerRow.values.slice(1).map((v:any)=> String(v ?? '').trim())
-    sheet.eachRow((row, rowNumber)=>{
+    const headerVals = ((headerRow.values as any[]) || []).slice(1)
+    const headers = headerVals.map((v:any) => String(v ?? '').trim())
+    sheet.eachRow((row: any, rowNumber: number)=>{
       if(rowNumber === 1) return
-      const vals = row.values.slice(1)
+      const vals = ((row.values as any[]) || []).slice(1)
       const obj:any = {}
       for(let i=0;i<headers.length;i++) obj[headers[i]] = vals[i] ?? ''
       // only include non-empty rows
-      if(Object.values(obj).some(v=> String(v).trim().length>0)) rows.push(obj)
+      if(Object.values(obj).some((v:any)=> String(v).trim().length>0)) rows.push(obj)
     })
     return res.json({ rows })
   }catch(err:any){
@@ -603,7 +612,7 @@ app.patch('/api/admin/electives/:id/polling-close', requireAdmin, async (req, re
 
 // Group actions (by parent_code)
 app.patch('/api/admin/electives/group/:parent/activate', requireAdmin, async (req, res) =>{
-  const parent = req.params.parent
+  const parent = String(req.params.parent)
   try{
     // Build query: support 'Other', parent id (uuid), or parent name
     let query
@@ -626,7 +635,7 @@ app.patch('/api/admin/electives/group/:parent/activate', requireAdmin, async (re
 })
 
 app.patch('/api/admin/electives/group/:parent/deactivate', requireAdmin, async (req, res) =>{
-  const parent = req.params.parent
+  const parent = String(req.params.parent)
   try{
     // Build query: support 'Other', parent id (uuid), or parent name
     let query
@@ -649,7 +658,7 @@ app.patch('/api/admin/electives/group/:parent/deactivate', requireAdmin, async (
 })
 
 app.patch('/api/admin/electives/group/:parent/polling-close', requireAdmin, async (req, res) =>{
-  const parent = req.params.parent
+  const parent = String(req.params.parent)
   try{
     // Build query: support 'Other', parent id (uuid), or parent name
     let query
@@ -844,7 +853,7 @@ app.get('/api/student/electives', requireStudent, async (req, res) =>{
     }
 
     // Query electives matching student's year/semester, active/open, and not blocked for their dept
-    let query = supabaseService.from('electives')
+    const query = supabaseService.from('electives')
       .select('id, parent_elective_id, parent_electives(name, year, sem), subject_name, subject_code, providing_department_id, total_seats, filled_seats, is_active, polling_closed')
       .eq('is_active', true)
       .eq('polling_closed', false)
@@ -931,7 +940,7 @@ app.get('/api/admin/electives/:id/students', requireAdmin, async (req, res) =>{
 
     // fetch department names for mapping
     const deptIds = Array.from(new Set((students ?? []).map((s:any) => s.department_id).filter(Boolean)))
-    let deptMap: Record<string,string> = {}
+    const deptMap: Record<string,string> = {}
     if(deptIds.length > 0){
       const { data: depts, error: dErr } = await supabaseService.from('departments').select('id, name').in('id', deptIds)
       if(dErr) {

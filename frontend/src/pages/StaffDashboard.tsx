@@ -24,9 +24,9 @@ export default function StaffDashboard() {
   const [studentsModalError, setStudentsModalError] = useState<string | null>(null)
   const [studentsList, setStudentsList] = useState<any[]>([])
 
-  async function authHeader() {
+  async function authHeader(): Promise<HeadersInit> {
     const token = (await supabase.auth.getSession()).data.session?.access_token
-    return token ? { Authorization: `Bearer ${token}` } : {}
+    return (token ? { Authorization: `Bearer ${token}` } : {}) as HeadersInit
   }
 
   useEffect(() => {
